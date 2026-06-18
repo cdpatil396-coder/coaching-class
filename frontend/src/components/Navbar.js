@@ -97,7 +97,7 @@ function Navbar() {
               text-gray-500
             ">
 
-              10th & 12th Board Preparation
+              10th & 12th Preparation | MH-CET
 
             </p>
 
