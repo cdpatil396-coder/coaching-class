@@ -36,7 +36,7 @@ function Admission() {
 
       const res = await axios.post(
 
-        "http://localhost:5000/api/admissions",
+        `${process.env.REACT_APP_API_URL}/api/admissions`,
 
         formData
 
