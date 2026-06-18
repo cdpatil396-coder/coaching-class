@@ -122,7 +122,7 @@ function Home() {
           >
 
             Best Coaching Classes for
-            10th & 12th Board Students
+            10th & 12th Students | MH-CET
 
           </motion.p>
 
