@@ -49,16 +49,13 @@ function AdminDashboard() {
       localStorage.getItem("token");
 
       const res = await axios.get(
-
-        "http://localhost:5000/api/admissions",
-
+        `${process.env.REACT_APP_API_URL}/api/admissions`,
         {
           headers: {
             Authorization:
             `Bearer ${token}`
           }
         }
-
       );
 
       setAdmissions(res.data);
@@ -89,16 +86,13 @@ function AdminDashboard() {
       localStorage.getItem("token");
 
       await axios.delete(
-
-        `http://localhost:5000/api/admissions/${id}`,
-
+        `${process.env.REACT_APP_API_URL}/api/admissions/${id}`,
         {
           headers: {
             Authorization:
             `Bearer ${token}`
           }
         }
-
       );
 
       fetchAdmissions();
@@ -149,18 +143,14 @@ function AdminDashboard() {
       localStorage.getItem("token");
 
       await axios.put(
-
-        `http://localhost:5000/api/admissions/${editingStudent}`,
-
+        `${process.env.REACT_APP_API_URL}/api/admissions/${editingStudent}`,
         formData,
-
         {
           headers: {
             Authorization:
             `Bearer ${token}`
           }
         }
-
       );
 
       setEditingStudent(null);
