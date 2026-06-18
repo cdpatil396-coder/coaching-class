@@ -4,7 +4,11 @@ const mongoose = require("mongoose");
 
 const cors = require("cors");
 
-require("dotenv").config();
+const dns = require("dns");
+
+require("dotenv").config({ quiet: true });
+
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 /* Routes */
 
@@ -28,22 +32,6 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/admissions", admissionRoutes);
 
-/* MongoDB Connection */
-
-mongoose.connect(process.env.MONGO_URI)
-
-.then(() => {
-
-  console.log("MongoDB Connected");
-
-})
-
-.catch((err) => {
-
-  console.log(err);
-
-});
-
 /* Test Route */
 
 app.get("/", (req, res) => {
@@ -56,8 +44,34 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+/* MongoDB Connection */
 
-  console.log(`Server running on port ${PORT}`);
+if (!process.env.MONGO_URI) {
+  console.error("MONGO_URI is missing in .env");
+  process.exit(1);
+}
+
+console.log("Connecting to MongoDB...");
+
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 10000,
+})
+
+.then(() => {
+
+  console.log("MongoDB Connected");
+
+  app.listen(PORT, () => {
+
+    console.log(`Server running on port ${PORT}`);
+
+  });
+
+})
+
+.catch((err) => {
+
+  console.error("MongoDB connection failed:", err.message);
+  process.exit(1);
 
 });
