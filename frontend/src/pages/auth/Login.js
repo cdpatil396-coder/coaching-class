@@ -50,7 +50,9 @@ function Login() {
 
       /* Redirect */
 
-      navigate("/dashboard");
+      navigate(
+        res.data.user?.role === "admin" ? "/admin" : "/dashboard"
+      );
 
       /* Auto Refresh Website */
 

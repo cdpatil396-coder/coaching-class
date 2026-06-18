@@ -21,10 +21,11 @@ exports.register = async (req, res) => {
     const hashedPassword =
       await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    await User.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: "student"
     });
 
     res.status(201).json({
@@ -79,7 +80,12 @@ exports.login = async (req, res) => {
 
     res.json({
       token,
-      user
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
     });
 
   } catch (error) {

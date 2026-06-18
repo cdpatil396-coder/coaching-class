@@ -87,7 +87,7 @@ function App() {
 
           element={
 
-            <ProtectedRoute>
+            <ProtectedRoute role="student">
 
               <Dashboard />
 
@@ -105,7 +105,7 @@ function App() {
 
           element={
 
-            <ProtectedRoute>
+            <ProtectedRoute role="admin">
 
               <AdminDashboard />
 

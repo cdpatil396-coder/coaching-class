@@ -176,7 +176,7 @@ function Navbar() {
             ">
 
               <Link
-                to="/dashboard"
+                to={user?.role === "admin" ? "/admin" : "/dashboard"}
                 className="
                   text-blue-700
                   font-bold
@@ -340,7 +340,7 @@ function Navbar() {
               <div className="space-y-4">
 
                 <Link
-                  to="/dashboard"
+                  to={user?.role === "admin" ? "/admin" : "/dashboard"}
                   className="
                     block
                     text-blue-700
