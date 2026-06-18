@@ -5,6 +5,8 @@ import axios from "axios";
 
 import { motion } from "framer-motion";
 
+import API_URL from "../apiConfig";
+
 import {
   FaUserGraduate,
   FaBookOpen,
@@ -49,7 +51,7 @@ function AdminDashboard() {
       localStorage.getItem("token");
 
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/admissions`,
+        `${API_URL}/api/admissions`,
         {
           headers: {
             Authorization:
@@ -86,7 +88,7 @@ function AdminDashboard() {
       localStorage.getItem("token");
 
       await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/admissions/${id}`,
+        `${API_URL}/api/admissions/${id}`,
         {
           headers: {
             Authorization:
@@ -143,7 +145,7 @@ function AdminDashboard() {
       localStorage.getItem("token");
 
       await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/admissions/${editingStudent}`,
+        `${API_URL}/api/admissions/${editingStudent}`,
         formData,
         {
           headers: {

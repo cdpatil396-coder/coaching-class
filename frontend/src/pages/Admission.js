@@ -4,6 +4,8 @@ import axios from "axios";
 
 import { motion } from "framer-motion";
 
+import API_URL from "../apiConfig";
+
 function Admission() {
 
   const [formData, setFormData] = useState({
@@ -36,7 +38,7 @@ function Admission() {
 
       const res = await axios.post(
 
-        `${process.env.REACT_APP_API_URL}/api/admissions`,
+        `${API_URL}/api/admissions`,
 
         formData
 
