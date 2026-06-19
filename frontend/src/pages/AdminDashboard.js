@@ -29,6 +29,8 @@ function AdminDashboard() {
 
   const [editingStudent, setEditingStudent] =
   useState(null);
+  const [selectedStudent, setSelectedStudent] =
+  useState(null);
   const [selectedBatch, setSelectedBatch] =
   useState("10th");
 
@@ -143,6 +145,8 @@ function AdminDashboard() {
         }
       );
 
+      setSelectedStudent(null);
+
       fetchAdmissions();
 
     } catch (error) {
@@ -156,6 +160,8 @@ function AdminDashboard() {
   /* Edit Student */
 
   const editStudent = (student) => {
+
+    setSelectedStudent(null);
 
     setEditingStudent(student._id);
 
@@ -205,6 +211,8 @@ function AdminDashboard() {
       );
 
       setEditingStudent(null);
+
+      setSelectedStudent(null);
 
       fetchAdmissions();
 
@@ -728,15 +736,24 @@ function AdminDashboard() {
 
                     courseAdmissions.map((student) => (
 
-                      <div
+                      <button
+                        type="button"
                         key={student._id}
+                        onClick={() =>
+                          setSelectedStudent(student)
+                        }
                         className="
+                          w-full
+                          text-left
                           bg-white
                           rounded-2xl
                           border
                           border-gray-100
                           p-4
                           shadow-sm
+                          hover:border-blue-300
+                          hover:shadow-md
+                          transition
                         "
                       >
 
@@ -765,7 +782,7 @@ function AdminDashboard() {
                           {student.course}
                         </p>
 
-                      </div>
+                      </button>
 
                     ))
 
@@ -967,6 +984,202 @@ function AdminDashboard() {
         </table>
 
       </div>
+
+      {/* Student Detail Modal */}
+
+      {selectedStudent && (
+
+        <div className="
+          fixed
+          inset-0
+          bg-black/50
+          flex
+          items-center
+          justify-center
+          z-50
+          p-4
+        ">
+
+          <div className="
+            bg-white
+            rounded-3xl
+            w-full
+            max-w-2xl
+            shadow-2xl
+            overflow-hidden
+          ">
+
+            <div className="
+              bg-gradient-to-r
+              from-blue-700
+              to-cyan-600
+              text-white
+              p-6
+            ">
+
+              <p className="text-blue-100 font-semibold">
+                Admission Details
+              </p>
+
+              <h2 className="
+                text-3xl
+                font-bold
+              ">
+                {selectedStudent.studentName}
+              </h2>
+
+            </div>
+
+            <div className="
+              grid
+              md:grid-cols-2
+              gap-4
+              p-6
+            ">
+
+              {[
+                {
+                  label: "Student Name",
+                  value: selectedStudent.studentName
+                },
+                {
+                  label: "Phone",
+                  value: selectedStudent.phone
+                },
+                {
+                  label: "Email",
+                  value: selectedStudent.email
+                },
+                {
+                  label: "Class",
+                  value: selectedStudent.studentClass
+                },
+                {
+                  label: "Course",
+                  value: selectedStudent.course
+                },
+                {
+                  label: "Address",
+                  value: selectedStudent.address
+                }
+              ].map((item) => (
+
+                <div
+                  key={item.label}
+                  className="
+                    bg-blue-50
+                    border
+                    border-blue-100
+                    rounded-2xl
+                    p-4
+                  "
+                >
+
+                  <p className="
+                    text-sm
+                    font-semibold
+                    text-gray-500
+                    mb-1
+                  ">
+                    {item.label}
+                  </p>
+
+                  <p className="
+                    text-lg
+                    font-bold
+                    text-gray-900
+                    break-words
+                  ">
+                    {item.value}
+                  </p>
+
+                </div>
+
+              ))}
+
+            </div>
+
+            <div className="
+              flex
+              flex-col
+              sm:flex-row
+              gap-3
+              justify-end
+              p-6
+              pt-0
+            ">
+
+              <button
+                onClick={() =>
+                  editStudent(selectedStudent)
+                }
+                className="
+                  inline-flex
+                  items-center
+                  justify-center
+                  gap-2
+                  bg-blue-600
+                  hover:bg-blue-700
+                  text-white
+                  px-5
+                  py-3
+                  rounded-xl
+                  font-bold
+                  transition
+                "
+              >
+                <FaEdit />
+                Edit
+              </button>
+
+              <button
+                onClick={() =>
+                  deleteStudent(selectedStudent._id)
+                }
+                className="
+                  inline-flex
+                  items-center
+                  justify-center
+                  gap-2
+                  bg-red-500
+                  hover:bg-red-600
+                  text-white
+                  px-5
+                  py-3
+                  rounded-xl
+                  font-bold
+                  transition
+                "
+              >
+                <FaTrash />
+                Delete
+              </button>
+
+              <button
+                onClick={() =>
+                  setSelectedStudent(null)
+                }
+                className="
+                  bg-gray-200
+                  hover:bg-gray-300
+                  text-gray-800
+                  px-5
+                  py-3
+                  rounded-xl
+                  font-bold
+                  transition
+                "
+              >
+                Close
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* Edit Modal */}
 
