@@ -11,6 +11,8 @@ function Login() {
     email: "",
     password: ""
   });
+  const [showPassword, setShowPassword] =
+  useState(false);
 
   const handleChange = (e) => {
 
@@ -122,21 +124,43 @@ function Login() {
           required
         />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="
-            w-full
-            p-4
-            border
-            rounded-xl
-            mb-5
-          "
-          required
-        />
+        <div className="relative mb-5">
+
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            className="
+              w-full
+              p-4
+              pr-24
+              border
+              rounded-xl
+            "
+            required
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowPassword(!showPassword)
+            }
+            className="
+              absolute
+              right-4
+              top-1/2
+              -translate-y-1/2
+              text-sm
+              font-bold
+              text-blue-700
+            "
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+
+        </div>
 
         <button
           type="submit"

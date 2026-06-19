@@ -12,6 +12,13 @@ const admissionSchema = new mongoose.Schema({
     required: true
   },
 
+  email: {
+    type: String,
+    required: true,
+    lowercase: true,
+    trim: true
+  },
+
   studentClass: {
     type: String,
     required: true

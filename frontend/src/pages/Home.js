@@ -16,6 +16,23 @@ function Home() {
 
   const navigate = useNavigate();
 
+  const openAdmission = () => {
+
+    const alreadySubmitted =
+    localStorage.getItem("admissionSubmitted");
+
+    const token =
+    localStorage.getItem("token");
+
+    if (!alreadySubmitted) {
+      navigate("/admission");
+      return;
+    }
+
+    navigate(token ? "/dashboard" : "/login");
+
+  };
+
   const features = [
     {
       icon: <FaChalkboardTeacher />,
@@ -138,7 +155,7 @@ function Home() {
               scale: 0.95
             }}
 
-            onClick={() => navigate("/login")}
+            onClick={openAdmission}
 
             className="
               bg-yellow-400

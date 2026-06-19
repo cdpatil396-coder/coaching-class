@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Admission = require("../models/Admission");
 
 const bcrypt = require("bcryptjs");
 
@@ -9,8 +10,21 @@ exports.register = async (req, res) => {
   try {
 
     const { name, email, password } = req.body;
+    const cleanEmail = email.toLowerCase().trim();
 
-    const existingUser = await User.findOne({ email });
+    const admission = await Admission.findOne({
+      email: cleanEmail
+    });
+
+    if (!admission) {
+      return res.status(400).json({
+        message: "Please submit admission form before registration"
+      });
+    }
+
+    const existingUser = await User.findOne({
+      email: cleanEmail
+    });
 
     if (existingUser) {
       return res.status(400).json({
@@ -23,7 +37,7 @@ exports.register = async (req, res) => {
 
     await User.create({
       name,
-      email,
+      email: cleanEmail,
       password: hashedPassword,
       role: "student"
     });
@@ -47,8 +61,11 @@ exports.login = async (req, res) => {
   try {
 
     const { email, password } = req.body;
+    const cleanEmail = email.toLowerCase().trim();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email: cleanEmail
+    });
 
     if (!user) {
       return res.status(400).json({

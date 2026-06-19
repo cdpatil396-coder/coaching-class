@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
@@ -8,10 +9,13 @@ import API_URL from "../apiConfig";
 
 function Admission() {
 
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
 
     studentName: "",
     phone: "",
+    email: "",
     studentClass: "",
     course: "",
     address: ""
@@ -46,15 +50,31 @@ function Admission() {
 
       alert(res.data.message);
 
+      localStorage.setItem(
+        "admissionSubmitted",
+        "true"
+      );
+
+      localStorage.setItem(
+        "pendingAdmission",
+        JSON.stringify({
+          name: formData.studentName,
+          email: formData.email
+        })
+      );
+
       setFormData({
 
         studentName: "",
         phone: "",
+        email: "",
         studentClass: "",
         course: "",
         address: ""
 
       });
+
+      navigate("/register");
 
     } catch (error) {
 
@@ -154,6 +174,26 @@ function Admission() {
           name="phone"
           placeholder="Phone Number"
           value={formData.phone}
+          onChange={handleChange}
+          className="
+            w-full
+            p-4
+            rounded-2xl
+            border
+            border-gray-200
+            mb-5
+            outline-none
+            focus:ring-2
+            focus:ring-blue-500
+          "
+          required
+        />
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Email Address"
+          value={formData.email}
           onChange={handleChange}
           className="
             w-full

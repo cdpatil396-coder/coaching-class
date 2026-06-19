@@ -6,6 +6,7 @@ const {
 
   createAdmission,
   getAdmissions,
+  getMyAdmission,
   deleteAdmission,
   updateAdmission
 
@@ -32,6 +33,12 @@ router.post(
 /* Admin Routes */
 
 /* Get All Admissions */
+
+router.get(
+  "/me",
+  protect,
+  getMyAdmission
+);
 
 router.get(
   "/",

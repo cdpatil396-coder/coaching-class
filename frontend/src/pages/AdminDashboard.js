@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
@@ -9,13 +10,17 @@ import API_URL from "../apiConfig";
 
 import {
   FaUserGraduate,
+  FaUsers,
   FaBookOpen,
   FaChalkboardTeacher,
   FaTrash,
-  FaEdit
+  FaEdit,
+  FaSignOutAlt
 } from "react-icons/fa";
 
 function AdminDashboard() {
+
+  const navigate = useNavigate();
 
   const [admissions, setAdmissions] =
   useState([]);
@@ -29,10 +34,34 @@ function AdminDashboard() {
   useState({
     studentName: "",
     phone: "",
+    email: "",
     studentClass: "",
     course: "",
     address: ""
   });
+
+  const batchClasses = [
+    "10th",
+    "11th",
+    "12th"
+  ];
+
+  const getBatchAdmissions = (batch) =>
+    admissions.filter((student) =>
+      student.studentClass === batch
+    );
+
+  const logout = () => {
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("user");
+
+    navigate("/login");
+
+    window.location.reload();
+
+  };
 
   useEffect(() => {
 
@@ -121,6 +150,9 @@ function AdminDashboard() {
       phone:
       student.phone,
 
+      email:
+      student.email || "",
+
       studentClass:
       student.studentClass,
 
@@ -197,33 +229,67 @@ function AdminDashboard() {
           duration: 0.7
         }}
 
-        className="mb-12"
+        className="
+          mb-12
+          flex
+          flex-col
+          md:flex-row
+          md:items-center
+          md:justify-between
+          gap-5
+        "
       >
 
-        <h1 className="
-          text-4xl
-          md:text-5xl
-          font-extrabold
-          bg-gradient-to-r
-          from-blue-700
-          to-indigo-700
-          bg-clip-text
-          text-transparent
-          mb-3
-        ">
+        <div>
 
-          Admin Dashboard
+          <h1 className="
+            text-4xl
+            md:text-5xl
+            font-extrabold
+            bg-gradient-to-r
+            from-blue-700
+            to-indigo-700
+            bg-clip-text
+            text-transparent
+            mb-3
+          ">
 
-        </h1>
+            Admin Dashboard
 
-        <p className="
-          text-gray-600
-          text-lg
-        ">
+          </h1>
 
-          Welcome to Swami Coaching Classes Admin Panel
+          <p className="
+            text-gray-600
+            text-lg
+          ">
 
-        </p>
+            Welcome to Swami Coaching Classes Admin Panel
+
+          </p>
+
+        </div>
+
+        <button
+          onClick={logout}
+          className="
+            inline-flex
+            items-center
+            justify-center
+            gap-3
+            bg-red-500
+            hover:bg-red-600
+            text-white
+            px-6
+            py-3
+            rounded-xl
+            font-bold
+            shadow-lg
+            transition
+          "
+        >
+          <FaSignOutAlt />
+          Logout
+        </button>
 
       </motion.div>
 
@@ -388,6 +454,135 @@ function AdminDashboard() {
 
       </div>
 
+      {/* Batch Sections */}
+
+      <div className="
+        grid
+        lg:grid-cols-3
+        gap-6
+        mb-14
+      ">
+
+        {batchClasses.map((batch) => {
+
+          const batchAdmissions =
+          getBatchAdmissions(batch);
+
+          return (
+
+            <motion.div
+              key={batch}
+              whileHover={{
+                y: -4
+              }}
+              className="
+                bg-white
+                rounded-3xl
+                shadow-xl
+                border
+                border-blue-100
+                overflow-hidden
+              "
+            >
+
+              <div className="
+                bg-gradient-to-r
+                from-cyan-600
+                to-blue-700
+                text-white
+                p-5
+                flex
+                items-center
+                justify-between
+              ">
+
+                <div>
+
+                  <p className="text-sm opacity-90">
+                    Batch Section
+                  </p>
+
+                  <h3 className="
+                    text-2xl
+                    font-bold
+                  ">
+                    {batch} Batch
+                  </h3>
+
+                </div>
+
+                <div className="
+                  text-3xl
+                  flex
+                  items-center
+                  gap-2
+                ">
+                  <FaUsers />
+                  <span className="font-bold">
+                    {batchAdmissions.length}
+                  </span>
+                </div>
+
+              </div>
+
+              <div className="p-5 space-y-4">
+
+                {batchAdmissions.length ? (
+
+                  batchAdmissions.map((student) => (
+
+                    <div
+                      key={student._id}
+                      className="
+                        border
+                        border-gray-100
+                        rounded-2xl
+                        p-4
+                        bg-gray-50
+                      "
+                    >
+
+                      <h4 className="
+                        font-bold
+                        text-gray-900
+                      ">
+                        {student.studentName}
+                      </h4>
+
+                      <p className="text-sm text-gray-600">
+                        {student.course} | {student.phone}
+                      </p>
+
+                      <p className="text-sm text-gray-500">
+                        {student.email}
+                      </p>
+
+                    </div>
+
+                  ))
+
+                ) : (
+
+                  <p className="
+                    text-gray-500
+                    text-sm
+                    py-4
+                  ">
+                    No admissions in this batch yet.
+                  </p>
+
+                )}
+
+              </div>
+
+            </motion.div>
+
+          );
+
+        })}
+
+      </div>
+
       {/* Admissions Table */}
 
       <div className="
@@ -440,6 +635,10 @@ function AdminDashboard() {
               </th>
 
               <th className="p-5">
+                Email
+              </th>
+
+              <th className="p-5">
                 Class
               </th>
 
@@ -481,6 +680,10 @@ function AdminDashboard() {
 
                 <td className="p-5">
                   {item.phone}
+                </td>
+
+                <td className="p-5">
+                  {item.email}
                 </td>
 
                 <td className="p-5">
@@ -628,8 +831,26 @@ function AdminDashboard() {
             />
 
             <input
-              type="text"
-              placeholder="Class"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  email:
+                  e.target.value
+                })
+              }
+              className="
+                w-full
+                border
+                p-3
+                rounded-xl
+                mb-4
+              "
+            />
+
+            <select
               value={formData.studentClass}
               onChange={(e) =>
                 setFormData({
@@ -645,7 +866,20 @@ function AdminDashboard() {
                 rounded-xl
                 mb-4
               "
-            />
+            >
+              <option value="">
+                Select Class
+              </option>
+              <option value="10th">
+                10th
+              </option>
+              <option value="11th">
+                11th
+              </option>
+              <option value="12th">
+                12th
+              </option>
+            </select>
 
             <input
               type="text"

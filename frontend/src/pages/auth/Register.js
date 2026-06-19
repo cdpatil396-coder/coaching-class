@@ -6,12 +6,17 @@ import API_URL from "../../apiConfig";
 function Register() {
 
   const navigate = useNavigate();
+  const pendingAdmission = JSON.parse(
+    localStorage.getItem("pendingAdmission")
+  );
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    name: pendingAdmission?.name || "",
+    email: pendingAdmission?.email || "",
     password: ""
   });
+  const [showPassword, setShowPassword] =
+  useState(false);
 
   const handleChange = (e) => {
 
@@ -28,12 +33,20 @@ function Register() {
 
     try {
 
+      if (!localStorage.getItem("admissionSubmitted")) {
+        alert("Please fill admission form first");
+        navigate("/admission");
+        return;
+      }
+
       const res = await axios.post(
         `${API_URL}/api/auth/register`,
         formData
       );
 
       alert(res.data.message);
+
+      localStorage.removeItem("pendingAdmission");
 
       navigate("/login");
 
@@ -89,6 +102,7 @@ function Register() {
           type="text"
           name="name"
           placeholder="Full Name"
+          value={formData.name}
           onChange={handleChange}
           className="
             w-full
@@ -104,6 +118,7 @@ function Register() {
           type="email"
           name="email"
           placeholder="Email"
+          value={formData.email}
           onChange={handleChange}
           className="
             w-full
@@ -115,20 +130,43 @@ function Register() {
           required
         />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-          className="
-            w-full
-            p-4
-            border
-            rounded-xl
-            mb-5
-          "
-          required
-        />
+        <div className="relative mb-5">
+
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            className="
+              w-full
+              p-4
+              pr-24
+              border
+              rounded-xl
+            "
+            required
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowPassword(!showPassword)
+            }
+            className="
+              absolute
+              right-4
+              top-1/2
+              -translate-y-1/2
+              text-sm
+              font-bold
+              text-blue-700
+            "
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+
+        </div>
 
         <button
           type="submit"
