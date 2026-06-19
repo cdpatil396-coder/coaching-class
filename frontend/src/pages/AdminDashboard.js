@@ -29,6 +29,8 @@ function AdminDashboard() {
 
   const [editingStudent, setEditingStudent] =
   useState(null);
+  const [selectedBatch, setSelectedBatch] =
+  useState("10th");
 
   const [formData, setFormData] =
   useState({
@@ -46,9 +48,24 @@ function AdminDashboard() {
     "12th"
   ];
 
+  const courseSections = [
+    "Mathematics",
+    "Science",
+    "English"
+  ];
+
   const getBatchAdmissions = (batch) =>
     admissions.filter((student) =>
       student.studentClass === batch
+    );
+
+  const getCourseAdmissions = (
+    batch,
+    course
+  ) =>
+    admissions.filter((student) =>
+      student.studentClass === batch &&
+      student.course === course
     );
 
   const logout = () => {
@@ -454,13 +471,13 @@ function AdminDashboard() {
 
       </div>
 
-      {/* Batch Sections */}
+      {/* Batch Icons */}
 
       <div className="
         grid
-        lg:grid-cols-3
+        md:grid-cols-3
         gap-6
-        mb-14
+        mb-8
       ">
 
         {batchClasses.map((batch) => {
@@ -468,118 +485,311 @@ function AdminDashboard() {
           const batchAdmissions =
           getBatchAdmissions(batch);
 
+          const isActive =
+          selectedBatch === batch;
+
           return (
 
-            <motion.div
+            <motion.button
               key={batch}
+              type="button"
               whileHover={{
                 y: -4
               }}
-              className="
-                bg-white
+              whileTap={{
+                scale: 0.98
+              }}
+              onClick={() =>
+                setSelectedBatch(batch)
+              }
+              className={`
+                text-left
                 rounded-3xl
                 shadow-xl
+                p-6
                 border
-                border-blue-100
-                overflow-hidden
-              "
+                transition
+                ${isActive
+                  ? "bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-blue-500"
+                  : "bg-white text-gray-900 border-blue-100 hover:border-blue-300"}
+              `}
             >
 
               <div className="
-                bg-gradient-to-r
-                from-cyan-600
-                to-blue-700
-                text-white
-                p-5
                 flex
                 items-center
                 justify-between
+                gap-4
               ">
 
-                <div>
-
-                  <p className="text-sm opacity-90">
-                    Batch Section
-                  </p>
-
-                  <h3 className="
-                    text-2xl
-                    font-bold
-                  ">
-                    {batch} Batch
-                  </h3>
-
-                </div>
-
                 <div className="
-                  text-3xl
                   flex
                   items-center
-                  gap-2
+                  gap-4
                 ">
-                  <FaUsers />
-                  <span className="font-bold">
-                    {batchAdmissions.length}
-                  </span>
+
+                  <div className={`
+                    w-16
+                    h-16
+                    rounded-2xl
+                    flex
+                    items-center
+                    justify-center
+                    text-3xl
+                    ${isActive
+                      ? "bg-white/20"
+                      : "bg-blue-50 text-blue-700"}
+                  `}>
+                    <FaUsers />
+                  </div>
+
+                  <div>
+
+                    <p className={`
+                      text-sm
+                      font-semibold
+                      ${isActive
+                        ? "text-blue-100"
+                        : "text-gray-500"}
+                    `}>
+                      Click to view
+                    </p>
+
+                    <h3 className="
+                      text-3xl
+                      font-bold
+                    ">
+                      {batch} Batch
+                    </h3>
+
+                  </div>
+
                 </div>
 
-              </div>
-
-              <div className="p-5 space-y-4">
-
-                {batchAdmissions.length ? (
-
-                  batchAdmissions.map((student) => (
-
-                    <div
-                      key={student._id}
-                      className="
-                        border
-                        border-gray-100
-                        rounded-2xl
-                        p-4
-                        bg-gray-50
-                      "
-                    >
-
-                      <h4 className="
-                        font-bold
-                        text-gray-900
-                      ">
-                        {student.studentName}
-                      </h4>
-
-                      <p className="text-sm text-gray-600">
-                        {student.course} | {student.phone}
-                      </p>
-
-                      <p className="text-sm text-gray-500">
-                        {student.email}
-                      </p>
-
-                    </div>
-
-                  ))
-
-                ) : (
-
-                  <p className="
-                    text-gray-500
-                    text-sm
-                    py-4
-                  ">
-                    No admissions in this batch yet.
-                  </p>
-
-                )}
+                <span className={`
+                  text-4xl
+                  font-extrabold
+                  ${isActive
+                    ? "text-white"
+                    : "text-blue-700"}
+                `}>
+                  {batchAdmissions.length}
+                </span>
 
               </div>
 
-            </motion.div>
+            </motion.button>
 
           );
 
         })}
+
+      </div>
+
+      {/* Selected Batch Course Lists */}
+
+      <div className="
+        bg-white
+        rounded-3xl
+        shadow-2xl
+        border
+        border-blue-100
+        overflow-hidden
+        mb-14
+      ">
+
+        <div className="
+          bg-gradient-to-r
+          from-slate-900
+          to-blue-800
+          text-white
+          p-6
+          flex
+          flex-col
+          md:flex-row
+          md:items-center
+          md:justify-between
+          gap-3
+        ">
+
+          <div>
+
+            <p className="text-blue-100 font-semibold">
+              Section Wise Student List
+            </p>
+
+            <h2 className="
+              text-3xl
+              font-bold
+            ">
+              {selectedBatch} Batch Students
+            </h2>
+
+          </div>
+
+          <div className="
+            flex
+            items-center
+            gap-3
+            text-lg
+            font-bold
+          ">
+            <FaUserGraduate />
+            {getBatchAdmissions(selectedBatch).length} Students
+          </div>
+
+        </div>
+
+        <div className="
+          grid
+          lg:grid-cols-3
+          gap-6
+          p-6
+        ">
+
+          {courseSections.map((course) => {
+
+            const courseAdmissions =
+            getCourseAdmissions(
+              selectedBatch,
+              course
+            );
+
+            return (
+
+              <div
+                key={course}
+                className="
+                  border
+                  border-gray-100
+                  rounded-2xl
+                  bg-gray-50
+                  overflow-hidden
+                "
+              >
+
+                <div className="
+                  bg-white
+                  p-5
+                  border-b
+                  border-gray-100
+                  flex
+                  items-center
+                  justify-between
+                ">
+
+                  <div className="
+                    flex
+                    items-center
+                    gap-3
+                  ">
+
+                    <div className="
+                      w-11
+                      h-11
+                      rounded-xl
+                      bg-blue-100
+                      text-blue-700
+                      flex
+                      items-center
+                      justify-center
+                      text-xl
+                    ">
+                      <FaBookOpen />
+                    </div>
+
+                    <h3 className="
+                      text-xl
+                      font-bold
+                      text-gray-900
+                    ">
+                      {course}
+                    </h3>
+
+                  </div>
+
+                  <span className="
+                    bg-blue-700
+                    text-white
+                    rounded-full
+                    px-3
+                    py-1
+                    text-sm
+                    font-bold
+                  ">
+                    {courseAdmissions.length}
+                  </span>
+
+                </div>
+
+                <div className="p-5 space-y-4">
+
+                  {courseAdmissions.length ? (
+
+                    courseAdmissions.map((student) => (
+
+                      <div
+                        key={student._id}
+                        className="
+                          bg-white
+                          rounded-2xl
+                          border
+                          border-gray-100
+                          p-4
+                          shadow-sm
+                        "
+                      >
+
+                        <h4 className="
+                          font-bold
+                          text-gray-900
+                          mb-1
+                        ">
+                          {student.studentName}
+                        </h4>
+
+                        <p className="text-sm text-gray-600">
+                          {student.phone}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          {student.email}
+                        </p>
+
+                        <p className="
+                          text-sm
+                          text-blue-700
+                          font-semibold
+                          mt-2
+                        ">
+                          {student.course}
+                        </p>
+
+                      </div>
+
+                    ))
+
+                  ) : (
+
+                    <p className="
+                      text-gray-500
+                      text-sm
+                      py-6
+                    ">
+                      No {course} students in {selectedBatch} batch yet.
+                    </p>
+
+                  )}
+
+                </div>
+
+              </div>
+
+            );
+
+          })}
+
+        </div>
 
       </div>
 
