@@ -23,6 +23,9 @@ const normalizeCourses = (courses) => {
   return [];
 };
 
+const normalizeNotes = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
 /* Create Admission */
 
 exports.createAdmission =
@@ -47,6 +50,7 @@ async (req, res) => {
       studentClass: normalizeString(req.body.studentClass),
       courses,
       address: normalizeString(req.body.address),
+      notes: normalizeNotes(req.body.notes),
       feeStatus: req.body.feeStatus || "pending"
     });
 
@@ -182,6 +186,9 @@ async (req, res) => {
       address: req.body.address !== undefined
         ? normalizeString(req.body.address)
         : req.body.address,
+      notes: req.body.notes !== undefined
+        ? normalizeNotes(req.body.notes)
+        : req.body.notes,
       feeStatus: req.body.feeStatus === "pending" || req.body.feeStatus === "paid"
         ? req.body.feeStatus
         : undefined

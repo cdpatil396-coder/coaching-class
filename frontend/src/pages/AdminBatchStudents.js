@@ -6,11 +6,14 @@ import API_URL from "../apiConfig";
 import {
   FaArrowLeft,
   FaCheckCircle,
+  FaCopy,
   FaEdit,
+  FaDownload,
   FaPhoneAlt,
   FaRegCreditCard,
   FaSave,
   FaSearch,
+  FaWhatsapp,
   FaTrash
 } from "react-icons/fa";
 
@@ -22,6 +25,7 @@ function AdminBatchStudents() {
   const [admissions, setAdmissions] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [feeFilter, setFeeFilter] = useState("all");
   const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
     studentName: "",
@@ -30,6 +34,7 @@ function AdminBatchStudents() {
     studentClass: batch || "10th",
     courses: [],
     address: "",
+    notes: "",
     feeStatus: "pending"
   });
   const [saving, setSaving] = useState(false);
@@ -60,10 +65,14 @@ function AdminBatchStudents() {
         !normalizedSearch ||
         student.studentName?.toLowerCase().includes(normalizedSearch) ||
         student.phone?.toLowerCase().includes(normalizedSearch) ||
-        student.email?.toLowerCase().includes(normalizedSearch);
-      return matchesBatch && matchesSearch;
+          student.email?.toLowerCase().includes(normalizedSearch);
+      const matchesFee =
+        feeFilter === "all" ||
+        (feeFilter === "paid" && student.feeStatus === "paid") ||
+        (feeFilter === "pending" && student.feeStatus !== "paid");
+      return matchesBatch && matchesSearch && matchesFee;
     });
-  }, [admissions, batch, search]);
+  }, [admissions, batch, feeFilter, search]);
 
   const stats = useMemo(() => {
     const total = filteredAdmissions.length;
@@ -88,6 +97,7 @@ function AdminBatchStudents() {
       studentClass: student.studentClass || batch,
       courses: Array.isArray(student.courses) ? student.courses : [],
       address: student.address || "",
+      notes: student.notes || "",
       feeStatus: student.feeStatus || "pending"
     });
   };
@@ -164,6 +174,43 @@ function AdminBatchStudents() {
     }
   };
 
+  const exportCsv = () => {
+    const rows = (selectedCourse ? courseAdmissions : filteredAdmissions).map((student) => ({
+      Name: student.studentName,
+      Phone: student.phone,
+      Email: student.email || "",
+      Batch: student.studentClass,
+      Courses: (student.courses || []).join(" | "),
+      FeeStatus: student.feeStatus || "pending",
+      Notes: student.notes || ""
+    }));
+
+    const header = ["Name,Phone,Email,Batch,Courses,FeeStatus,Notes"];
+    const body = rows.map((row) =>
+      [
+        row.Name,
+        row.Phone,
+        row.Email,
+        row.Batch,
+        row.Courses,
+        row.FeeStatus,
+        row.Notes
+      ]
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(",")
+    );
+
+    const blob = new Blob([header.concat(body).join("\n")], {
+      type: "text/csv;charset=utf-8;"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${batch}${selectedCourse ? `-${selectedCourse}` : ""}-students.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!VALID_BATCHES.includes(batch)) {
     return (
       <div className="min-h-screen bg-slate-50 px-4 py-10">
@@ -223,6 +270,30 @@ function AdminBatchStudents() {
                 className="w-full bg-transparent outline-none placeholder:text-white/50"
               />
             </label>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {[
+              { label: "All fees", value: "all" },
+              { label: "Paid", value: "paid" },
+              { label: "Pending", value: "pending" }
+            ].map((option) => {
+              const active = feeFilter === option.value;
+              return (
+                <button
+                  type="button"
+                  key={option.value}
+                  onClick={() => setFeeFilter(option.value)}
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                    active
+                      ? "bg-white text-slate-900 shadow-md"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -333,6 +404,14 @@ function AdminBatchStudents() {
                 </button>
               );
             })}
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:bg-slate-800"
+            >
+              <FaDownload />
+              Export CSV
+            </button>
           </div>
         </div>
 
@@ -386,6 +465,12 @@ function AdminBatchStudents() {
                           </span>
                         ))}
                       </div>
+
+                      {student.notes && (
+                        <p className="mt-3 max-w-2xl rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                          <span className="font-bold">Note:</span> {student.notes}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -405,6 +490,26 @@ function AdminBatchStudents() {
                         <FaTrash />
                         Delete
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(student.phone || "");
+                          alert("Phone number copied");
+                        }}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-bold text-slate-700 shadow-md transition hover:border-blue-300 hover:text-blue-700"
+                      >
+                        <FaCopy />
+                        Copy
+                      </button>
+                      <a
+                        href={`https://wa.me/${String(student.phone || "").replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 font-bold text-white shadow-md transition hover:bg-emerald-600"
+                      >
+                        <FaWhatsapp />
+                        WhatsApp
+                      </a>
                     </div>
                   </div>
 
@@ -555,6 +660,15 @@ function AdminBatchStudents() {
                   rows="4"
                   className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                   placeholder="Address"
+                />
+
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleFieldChange}
+                  rows="3"
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  placeholder="Notes"
                 />
 
                 <div className="flex gap-3">

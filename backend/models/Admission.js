@@ -39,6 +39,12 @@ const admissionSchema = new mongoose.Schema({
     type: String,
     required: false,
     default: ""
+  },
+
+  notes: {
+    type: String,
+    required: false,
+    default: ""
   }
 
 }, {

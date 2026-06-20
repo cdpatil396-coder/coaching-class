@@ -5,7 +5,10 @@ import { motion } from "framer-motion";
 import API_URL from "../apiConfig";
 import {
   FaBookOpen,
+  FaCopy,
+  FaFilter,
   FaRegCreditCard,
+  FaWhatsapp,
   FaUserGraduate,
   FaUsers
 } from "react-icons/fa";
@@ -16,6 +19,9 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const [admissions, setAdmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [batchFilter, setBatchFilter] = useState("all");
+  const [feeFilter, setFeeFilter] = useState("all");
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -49,6 +55,36 @@ function AdminDashboard() {
     const paid = admissions.filter((item) => item.feeStatus === "paid").length;
     return { pending, paid };
   }, [admissions]);
+
+  const filteredAdmissions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return admissions.filter((item) => {
+      const matchesQuery =
+        !query ||
+        item.studentName?.toLowerCase().includes(query) ||
+        item.phone?.toLowerCase().includes(query) ||
+        item.email?.toLowerCase().includes(query) ||
+        (item.courses || []).some((course) =>
+          course.toLowerCase().includes(query)
+        );
+      const matchesBatch =
+        batchFilter === "all" || item.studentClass === batchFilter;
+      const matchesFee =
+        feeFilter === "all" ||
+        (feeFilter === "paid" && item.feeStatus === "paid") ||
+        (feeFilter === "pending" && item.feeStatus !== "paid");
+      return matchesQuery && matchesBatch && matchesFee;
+    });
+  }, [admissions, batchFilter, feeFilter, search]);
+
+  const copyPhone = async (phone) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      alert("Phone number copied");
+    } catch (error) {
+      alert("Could not copy phone number");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e0f2fe,_#f8fafc_40%,_#eef2ff_100%)] px-4 py-8 md:px-8">
@@ -169,8 +205,67 @@ function AdminDashboard() {
               </h2>
             </div>
             <div className="text-sm font-semibold text-slate-500">
-              {loading ? "Loading..." : `${admissions.length} total records`}
+              {loading ? "Loading..." : `${filteredAdmissions.length} filtered of ${admissions.length} total`}
             </div>
+          </div>
+
+          <div className="grid gap-4 border-b border-slate-100 p-6 md:grid-cols-4">
+            <label className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">
+                Search
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Name, phone, course"
+                className="w-full bg-transparent outline-none"
+              />
+            </label>
+
+            <label className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <span className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                <FaFilter />
+                Batch
+              </span>
+              <select
+                value={batchFilter}
+                onChange={(e) => setBatchFilter(e.target.value)}
+                className="w-full bg-transparent outline-none"
+              >
+                <option value="all">All batches</option>
+                <option value="10th">10th</option>
+                <option value="11th">11th</option>
+                <option value="12th">12th</option>
+              </select>
+            </label>
+
+            <label className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <span className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                <FaFilter />
+                Fee
+              </span>
+              <select
+                value={feeFilter}
+                onChange={(e) => setFeeFilter(e.target.value)}
+                className="w-full bg-transparent outline-none"
+              >
+                <option value="all">All fees</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setBatchFilter("all");
+                setFeeFilter("all");
+              }}
+              className="rounded-2xl bg-blue-700 px-4 py-3 font-bold text-white shadow-md transition hover:bg-blue-800"
+            >
+              Reset Filters
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -180,16 +275,23 @@ function AdminDashboard() {
                   <th className="px-6 py-4">Name</th>
                   <th className="px-6 py-4">Batch</th>
                   <th className="px-6 py-4">Courses</th>
+                  <th className="px-6 py-4">Notes</th>
                   <th className="px-6 py-4">Fees</th>
+                  <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {admissions.slice(0, 8).map((item) => (
+                {filteredAdmissions.slice(0, 8).map((item) => (
                   <tr key={item._id} className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-semibold text-slate-900">{item.studentName}</td>
                     <td className="px-6 py-4 text-slate-700">{item.studentClass}</td>
                     <td className="px-6 py-4 text-slate-700">
                       {(item.courses || []).join(", ")}
+                    </td>
+                    <td className="px-6 py-4 text-slate-700">
+                      <span className="block max-w-[240px] truncate">
+                        {item.notes || "No notes"}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -202,12 +304,33 @@ function AdminDashboard() {
                         {(item.feeStatus || "pending").toUpperCase()}
                       </span>
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => copyPhone(item.phone)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                        >
+                          <FaCopy />
+                          Copy
+                        </button>
+                        <a
+                          href={`https://wa.me/${String(item.phone || "").replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-emerald-600"
+                        >
+                          <FaWhatsapp />
+                          WhatsApp
+                        </a>
+                      </div>
+                    </td>
                   </tr>
                 ))}
-                {!admissions.length && (
+                {!filteredAdmissions.length && (
                   <tr>
-                    <td className="px-6 py-8 text-slate-500" colSpan={4}>
-                      No admissions found yet.
+                    <td className="px-6 py-8 text-slate-500" colSpan={6}>
+                      No admissions match your current filters.
                     </td>
                   </tr>
                 )}

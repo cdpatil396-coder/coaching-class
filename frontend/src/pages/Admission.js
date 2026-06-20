@@ -24,7 +24,8 @@ function Admission() {
     email: "",
     studentClass: "",
     courses: [],
-    address: ""
+    address: "",
+    notes: ""
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -85,7 +86,8 @@ function Admission() {
           phone: formData.phone,
           email: formData.email,
           studentClass: formData.studentClass,
-          courses: formData.courses
+          courses: formData.courses,
+          notes: formData.notes
         })
       );
 
@@ -95,7 +97,8 @@ function Admission() {
         email: "",
         studentClass: "",
         courses: [],
-        address: ""
+        address: "",
+        notes: ""
       });
 
       navigate("/register");
@@ -264,6 +267,15 @@ function Admission() {
             onChange={handleChange}
             rows="4"
             className="mt-6 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+          />
+
+          <textarea
+            name="notes"
+            placeholder="Any special note for the admission team (optional)"
+            value={formData.notes}
+            onChange={handleChange}
+            rows="3"
+            className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
 
           <button
