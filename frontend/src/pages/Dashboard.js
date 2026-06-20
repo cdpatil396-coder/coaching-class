@@ -3,7 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   FaBookOpen,
-  FaCalendarCheck,
   FaChartBar,
   FaEnvelope,
   FaHome,
@@ -80,11 +79,6 @@ function Dashboard() {
       ? admission.testResults[admission.testResults.length - 1]
       : null;
 
-  const latestAttendance =
-    admission?.attendanceHistory && admission.attendanceHistory.length
-      ? admission.attendanceHistory[admission.attendanceHistory.length - 1]
-      : null;
-
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#ecfeff,_#f8fafc_45%,_#fff7ed_100%)] px-4 py-10">
       <div className="mx-auto w-full max-w-6xl rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
@@ -97,14 +91,6 @@ function Dashboard() {
               Welcome {user?.name}
             </h1>
           </div>
-
-          {admission?.photoData && (
-            <img
-              src={admission.photoData}
-              alt={admission.studentName}
-              className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-xl"
-            />
-          )}
 
           <button
             onClick={logout}
@@ -144,11 +130,6 @@ function Dashboard() {
                 icon: <FaRegCreditCard />,
                 label: "Fee Status",
                 value: admission.feeStatus
-              },
-              {
-                icon: <FaCalendarCheck />,
-                label: "Today Attendance",
-                value: latestAttendance?.status || "Not marked"
               },
               {
                 icon: <FaChartBar />,
@@ -254,22 +235,14 @@ function Dashboard() {
                 <div className="mt-4 space-y-4">
                   {[
                     {
-                      label: "Attendance Rate",
-                      value: admission.attendanceHistory?.length
-                        ? `${Math.round(
-                            (admission.attendanceHistory.filter((item) => item.status === "present").length /
-                              admission.attendanceHistory.length) *
-                              100
-                          )}%`
-                        : "0%"
-                    },
-                    {
                       label: "Courses Selected",
-                      value: `${admission.courses?.length || 0}`
+                      value: `${admission.courses?.length || 0}`,
+                      max: 3
                     },
                     {
                       label: "Tests Completed",
-                      value: `${admission.testResults?.length || 0}`
+                      value: `${admission.testResults?.length || 0}`,
+                      max: 5
                     }
                   ].map((item) => (
                     <div key={item.label}>
@@ -281,12 +254,10 @@ function Dashboard() {
                         <div
                           className="h-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
                           style={{
-                            width:
-                              item.label === "Attendance Rate"
-                                ? item.value
-                                : item.label === "Courses Selected"
-                                ? `${Math.min((admission.courses?.length || 0) * 33, 100)}%`
-                                : `${Math.min((admission.testResults?.length || 0) * 20, 100)}%`
+                            width: `${Math.min(
+                              ((Number(item.value) || 0) / item.max) * 100,
+                              100
+                            )}%`
                           }}
                         />
                       </div>

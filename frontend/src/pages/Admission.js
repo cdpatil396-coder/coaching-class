@@ -25,8 +25,7 @@ function Admission() {
     studentClass: "",
     courses: [],
     address: "",
-    notes: "",
-    photoData: ""
+    notes: ""
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,20 +52,6 @@ function Admission() {
           : [...prev.courses, course]
       };
     });
-  };
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormData((prev) => ({
-        ...prev,
-        photoData: reader.result || ""
-      }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
@@ -102,8 +87,7 @@ function Admission() {
           email: formData.email,
           studentClass: formData.studentClass,
           courses: formData.courses,
-          notes: formData.notes,
-          photoData: formData.photoData
+          notes: formData.notes
         })
       );
 
@@ -114,8 +98,7 @@ function Admission() {
         studentClass: "",
         courses: [],
         address: "",
-        notes: "",
-        photoData: ""
+        notes: ""
       });
 
       navigate("/register");
@@ -294,26 +277,6 @@ function Admission() {
             rows="3"
             className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
-
-          <label className="mt-4 block rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4">
-            <span className="mb-2 block text-sm font-bold text-slate-700">
-              Student Photo (optional)
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              className="w-full text-sm text-slate-600"
-            />
-          </label>
-
-          {formData.photoData && (
-            <img
-              src={formData.photoData}
-              alt="Preview"
-              className="mt-3 h-24 w-24 rounded-2xl object-cover shadow-md"
-            />
-          )}
 
           <button
             type="submit"

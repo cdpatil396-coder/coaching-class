@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaUserGraduate,
-  FaClipboardCheck,
   FaMoneyBillWave,
   FaFilePdf,
   FaPoll,
@@ -79,25 +78,6 @@ function AdminSidebar() {
           <FaUserGraduate />
 
           Students
-
-        </Link>
-
-        <Link
-          to="/admin/attendance"
-          className="
-            flex
-            items-center
-            gap-4
-            hover:bg-white/20
-            p-4
-            rounded-2xl
-            transition
-          "
-        >
-
-          <FaClipboardCheck />
-
-          Attendance
 
         </Link>
 

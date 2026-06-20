@@ -47,12 +47,6 @@ const admissionSchema = new mongoose.Schema({
     default: ""
   },
 
-  photoData: {
-    type: String,
-    required: false,
-    default: ""
-  },
-
   receiptNo: {
     type: String,
     required: false,
@@ -62,19 +56,6 @@ const admissionSchema = new mongoose.Schema({
   paidAt: {
     type: Date,
     required: false
-  },
-
-  attendanceHistory: {
-    type: [
-      {
-        date: String,
-        status: {
-          type: String,
-          enum: ["present", "absent"]
-        }
-      }
-    ],
-    default: []
   },
 
   testResults: {

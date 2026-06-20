@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import API_URL from "../apiConfig";
 import {
   FaArrowLeft,
   FaCheckCircle,
   FaCopy,
-  FaCalendarCheck,
   FaEdit,
   FaDownload,
   FaFileAlt,
   FaBullhorn,
-  FaImage,
   FaPhoneAlt,
   FaRegCreditCard,
   FaSave,
@@ -27,6 +25,7 @@ const VALID_BATCHES = ["10th", "11th", "12th"];
 
 function AdminBatchStudents() {
   const { batch } = useParams();
+  const navigate = useNavigate();
   const [admissions, setAdmissions] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -42,7 +41,6 @@ function AdminBatchStudents() {
     courses: [],
     address: "",
     notes: "",
-    photoData: "",
     feeStatus: "pending"
   });
   const [assignmentForm, setAssignmentForm] = useState({
@@ -77,12 +75,12 @@ function AdminBatchStudents() {
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
         return;
       }
       console.log(error);
     }
-  }, []);
+  }, [navigate]);
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -100,12 +98,12 @@ function AdminBatchStudents() {
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
         return;
       }
       console.log(error);
     }
-  }, [batch]);
+  }, [batch, navigate]);
 
   useEffect(() => {
     fetchAdmissions();
@@ -162,7 +160,6 @@ function AdminBatchStudents() {
       courses: Array.isArray(student.courses) ? student.courses : [],
       address: student.address || "",
       notes: student.notes || "",
-      photoData: student.photoData || "",
       feeStatus: student.feeStatus || "pending"
     });
   };
@@ -173,20 +170,6 @@ function AdminBatchStudents() {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormData((prev) => ({
-        ...prev,
-        photoData: reader.result || ""
-      }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const toggleCourse = (course) => {
@@ -229,29 +212,6 @@ function AdminBatchStudents() {
       alert(error.response?.data?.message || "Update failed");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const markAttendance = async (student, status) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_URL}/api/admissions/${student._id}`,
-        {
-          attendanceMark: {
-            date: new Date().toISOString().slice(0, 10),
-            status
-          }
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      fetchAdmissions();
-    } catch (error) {
-      alert(error.response?.data?.message || "Attendance update failed");
     }
   };
 
@@ -553,6 +513,15 @@ function AdminBatchStudents() {
                 Tap a course to open the full admission list
               </h2>
             </div>
+            {selectedCourse && (
+              <button
+                type="button"
+                onClick={() => setSelectedCourse(null)}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-md transition hover:border-blue-300 hover:text-blue-700"
+              >
+                Clear subject filter
+              </button>
+            )}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
@@ -753,33 +722,44 @@ function AdminBatchStudents() {
           </div>
 
           <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-2xl">
-            <div className="mb-4 flex items-center gap-3">
-              <FaCalendarCheck className="text-2xl text-blue-700" />
+            <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
-                  Attendance
+                  Quick access
                 </p>
                 <h2 className="text-2xl font-black text-slate-900">
-                  Quick mark from student cards
+                  Find, filter, and edit students faster
                 </h2>
               </div>
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-md transition hover:border-blue-300 hover:text-blue-700"
+              >
+                <FaDownload />
+                Export CSV
+              </button>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               {[
-                { label: "Total", value: stats.total },
-                { label: "Paid", value: stats.paid },
-                { label: "Pending", value: stats.pending }
+                { label: "Students", value: stats.total, tone: "from-blue-600 to-indigo-700" },
+                { label: "Paid", value: stats.paid, tone: "from-emerald-500 to-green-600" },
+                { label: "Pending", value: stats.pending, tone: "from-rose-500 to-red-600" }
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">{item.label}</p>
-                  <p className="text-3xl font-black text-slate-900">{item.value}</p>
+                <div
+                  key={item.label}
+                  className={`rounded-2xl bg-gradient-to-r ${item.tone} p-4 text-white shadow-lg`}
+                >
+                  <p className="text-sm font-semibold text-white/80">{item.label}</p>
+                  <p className="mt-2 text-3xl font-black">{item.value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 rounded-2xl bg-blue-50 p-4 text-sm text-blue-900">
-              Mark Present / Absent on each student to build the attendance history.
+            <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
+              Select a course to narrow the list, then click <span className="font-bold">Edit</span> to load
+              the student details panel on the right.
             </div>
           </div>
         </div>
@@ -822,6 +802,9 @@ function AdminBatchStudents() {
                         <span className="rounded-full bg-slate-100 px-3 py-1">
                           {student.studentClass}
                         </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1">
+                          {student.courses?.length || 0} course(s)
+                        </span>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -846,13 +829,10 @@ function AdminBatchStudents() {
                           Receipt: {student.receiptNo || "Pending"}
                         </span>
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
-                          Attendance:{" "}
-                          {student.attendanceHistory && student.attendanceHistory.length
-                            ? student.attendanceHistory[student.attendanceHistory.length - 1].status
-                            : "Not marked"}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
                           Tests: {student.testResults?.length || 0}
+                        </span>
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
+                          Click Edit for full details
                         </span>
                       </div>
                     </div>
@@ -894,22 +874,6 @@ function AdminBatchStudents() {
                         <FaWhatsapp />
                         WhatsApp
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => markAttendance(student, "present")}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-100 px-4 py-3 font-bold text-emerald-700 shadow-md transition hover:bg-emerald-200"
-                      >
-                        <FaCalendarCheck />
-                        Present
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => markAttendance(student, "absent")}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-rose-100 px-4 py-3 font-bold text-rose-700 shadow-md transition hover:bg-rose-200"
-                      >
-                        <FaCalendarCheck />
-                        Absent
-                      </button>
                       <button
                         type="button"
                         onClick={() => openReceipt(student)}
@@ -993,7 +957,7 @@ function AdminBatchStudents() {
             )}
           </div>
 
-          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-2xl">
+          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-2xl xl:sticky xl:top-6">
             <div className="mb-5">
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
                 Edit panel
@@ -1005,6 +969,25 @@ function AdminBatchStudents() {
 
             {editingStudent ? (
               <form onSubmit={updateStudent} className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl bg-blue-50 px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Class</p>
+                    <p className="mt-1 font-black text-slate-900">{editingStudent.studentClass}</p>
+                  </div>
+                  <div className="rounded-2xl bg-emerald-50 px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Fee</p>
+                    <p className="mt-1 font-black text-slate-900">
+                      {(formData.feeStatus || "pending").toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-amber-50 px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Receipt</p>
+                    <p className="mt-1 truncate font-black text-slate-900">
+                      {editingStudent.receiptNo || "Pending"}
+                    </p>
+                  </div>
+                </div>
+
                 <input
                   name="studentName"
                   value={formData.studentName}
@@ -1097,27 +1080,6 @@ function AdminBatchStudents() {
                   className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                   placeholder="Notes"
                 />
-
-                <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4">
-                  <span className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <FaImage className="text-blue-700" />
-                    Student Photo
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="w-full text-sm text-slate-600"
-                  />
-                </label>
-
-                {formData.photoData && (
-                  <img
-                    src={formData.photoData}
-                    alt="Student preview"
-                    className="h-28 w-28 rounded-2xl object-cover shadow-md"
-                  />
-                )}
 
                 <div className="flex gap-3">
                   <button

@@ -26,14 +26,6 @@ const normalizeCourses = (courses) => {
 const normalizeNotes = (value) =>
   typeof value === "string" ? value.trim() : "";
 
-const normalizePhotoData = (value) =>
-  typeof value === "string" ? value.trim() : "";
-
-const normalizeHistoryDate = (value) =>
-  typeof value === "string" && value.trim()
-    ? value.trim()
-    : new Date().toISOString().slice(0, 10);
-
 /* Create Admission */
 
 exports.createAdmission =
@@ -72,7 +64,6 @@ async (req, res) => {
       courses,
       address: normalizeString(req.body.address),
       notes: normalizeNotes(req.body.notes),
-      photoData: normalizePhotoData(req.body.photoData),
       feeStatus: req.body.feeStatus || "pending"
     });
 
@@ -211,25 +202,10 @@ async (req, res) => {
       notes: req.body.notes !== undefined
         ? normalizeNotes(req.body.notes)
         : req.body.notes,
-      photoData: req.body.photoData !== undefined
-        ? normalizePhotoData(req.body.photoData)
-        : req.body.photoData,
       feeStatus: req.body.feeStatus === "pending" || req.body.feeStatus === "paid"
         ? req.body.feeStatus
         : undefined
     };
-
-    if (req.body.attendanceMark) {
-      payload.$push = payload.$push || {};
-      payload.$push.attendanceHistory = {
-        date: normalizeHistoryDate(req.body.attendanceMark.date),
-        status:
-          req.body.attendanceMark.status === "absent"
-            ? "absent"
-            : "present"
-      };
-      delete payload.attendanceMark;
-    }
 
     if (req.body.testResult) {
       payload.$push = payload.$push || {};
@@ -238,7 +214,10 @@ async (req, res) => {
         course: normalizeString(req.body.testResult.course),
         score: Number(req.body.testResult.score || 0),
         maxScore: Number(req.body.testResult.maxScore || 100),
-        date: normalizeHistoryDate(req.body.testResult.date)
+        date:
+          typeof req.body.testResult.date === "string" && req.body.testResult.date.trim()
+            ? req.body.testResult.date.trim()
+            : new Date().toISOString().slice(0, 10)
       };
       delete payload.testResult;
     }
