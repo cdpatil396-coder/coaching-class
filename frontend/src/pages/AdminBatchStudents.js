@@ -74,13 +74,6 @@ function AdminBatchStudents() {
     course: COURSE_OPTIONS[0],
     dueDate: ""
   });
-  const [testForm, setTestForm] = useState({
-    testName: "",
-    course: COURSE_OPTIONS[0],
-    score: "",
-    maxScore: "100",
-    date: new Date().toISOString().slice(0, 10)
-  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -237,36 +230,6 @@ function AdminBatchStudents() {
       alert(error.response?.data?.message || "Update failed");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const addTestResult = async (e) => {
-    e.preventDefault();
-    if (!editingStudent) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_URL}/api/admissions/${editingStudent._id}`,
-        {
-          testResult: testForm
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      setTestForm({
-        testName: "",
-        course: COURSE_OPTIONS[0],
-        score: "",
-        maxScore: "100",
-        date: new Date().toISOString().slice(0, 10)
-      });
-      fetchAdmissions();
-    } catch (error) {
-      alert(error.response?.data?.message || "Test save failed");
     }
   };
 
@@ -860,9 +823,6 @@ function AdminBatchStudents() {
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
                           Receipt: {student.receiptNo || "Pending"}
                         </span>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
-                          Tests: {student.testResults?.length || 0}
-                        </span>
                         <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
                           Click Edit for full details
                         </span>
@@ -1139,86 +1099,6 @@ function AdminBatchStudents() {
                   </button>
                 </div>
 
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                  <p className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
-                    <FaFileAlt className="text-blue-700" />
-                    Add Test Result
-                  </p>
-                  <form onSubmit={addTestResult} className="space-y-3">
-                    <input
-                      value={testForm.testName}
-                      onChange={(e) =>
-                        setTestForm((prev) => ({ ...prev, testName: e.target.value }))
-                      }
-                      placeholder="Test name"
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      required
-                    />
-                    <div className="grid gap-3 md:grid-cols-3">
-                      <select
-                        value={testForm.course}
-                        onChange={(e) =>
-                          setTestForm((prev) => ({ ...prev, course: e.target.value }))
-                        }
-                        className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      >
-                        {COURSE_OPTIONS.map((course) => (
-                          <option key={course} value={course}>
-                            {course}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        value={testForm.score}
-                        onChange={(e) =>
-                          setTestForm((prev) => ({ ...prev, score: e.target.value }))
-                        }
-                        placeholder="Score"
-                        className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                        required
-                      />
-                      <input
-                        type="number"
-                        value={testForm.maxScore}
-                        onChange={(e) =>
-                          setTestForm((prev) => ({ ...prev, maxScore: e.target.value }))
-                        }
-                        placeholder="Max score"
-                        className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                        required
-                      />
-                    </div>
-                    <input
-                      type="date"
-                      value={testForm.date}
-                      onChange={(e) =>
-                        setTestForm((prev) => ({ ...prev, date: e.target.value }))
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                    />
-                    <button
-                      type="submit"
-                      className="w-full rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white"
-                    >
-                      Save Test Result
-                    </button>
-                  </form>
-
-                  <div className="mt-4 space-y-2">
-                    {(editingStudent.testResults || []).slice(0, 5).map((result, index) => (
-                      <div
-                        key={`${result.testName}-${index}`}
-                        className="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm"
-                      >
-                        <p className="font-bold text-slate-900">{result.testName}</p>
-                        <p className="text-slate-500">
-                          {result.course} | {result.score}/{result.maxScore} | {result.date}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </form>
             ) : (
               <div className="rounded-2xl bg-slate-50 p-5 text-slate-600">

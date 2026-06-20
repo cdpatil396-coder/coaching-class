@@ -233,21 +233,6 @@ async (req, res) => {
         : undefined
     };
 
-    if (req.body.testResult) {
-      payload.$push = payload.$push || {};
-      payload.$push.testResults = {
-        testName: normalizeString(req.body.testResult.testName),
-        course: normalizeString(req.body.testResult.course),
-        score: Number(req.body.testResult.score || 0),
-        maxScore: Number(req.body.testResult.maxScore || 100),
-        date:
-          typeof req.body.testResult.date === "string" && req.body.testResult.date.trim()
-            ? req.body.testResult.date.trim()
-            : new Date().toISOString().slice(0, 10)
-      };
-      delete payload.testResult;
-    }
-
     if (Array.isArray(payload.courses) && !payload.courses.length) {
       return res.status(400).json({
         message: "Please select at least one course"
