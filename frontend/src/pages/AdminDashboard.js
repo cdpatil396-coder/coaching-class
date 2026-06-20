@@ -15,6 +15,22 @@ import {
 
 const BATCHES = ["10th", "11th", "12th"];
 
+const buildWhatsAppUrl = (phone, message = "") => {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+
+  const indianNumber =
+    digits.startsWith("91") && digits.length >= 12
+      ? digits
+      : digits.startsWith("0") && digits.length > 10
+        ? `91${digits.slice(1)}`
+        : digits.length === 10
+          ? `91${digits}`
+          : digits;
+
+  return `https://wa.me/${indianNumber}${message ? `?text=${encodeURIComponent(message)}` : ""}`;
+};
+
 function AdminDashboard() {
   const navigate = useNavigate();
   const [admissions, setAdmissions] = useState([]);
@@ -395,7 +411,7 @@ function AdminDashboard() {
                           Copy
                         </button>
                         <a
-                          href={`https://wa.me/${String(item.phone || "").replace(/\D/g, "")}`}
+                          href={buildWhatsAppUrl(item.phone)}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-emerald-600"

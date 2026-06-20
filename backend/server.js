@@ -38,39 +38,58 @@ process.env.ADMIN_PASSWORD || "Waghod@123";
 const ADMIN_NAME =
 process.env.ADMIN_NAME || "Chetan Patil";
 
-const ensureAdminUser =
+const EXTRA_ADMIN_EMAIL = "swamicoaching396@gmail.com";
+const EXTRA_ADMIN_PASSWORD = "Swamicoaching396@123";
+const EXTRA_ADMIN_NAME = "Swami Coaching Admin";
+
+const ADMIN_ACCOUNTS = [
+  {
+    name: ADMIN_NAME,
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD
+  },
+  {
+    name: EXTRA_ADMIN_NAME,
+    email: EXTRA_ADMIN_EMAIL,
+    password: EXTRA_ADMIN_PASSWORD
+  }
+];
+
+const ensureAdminUsers =
 async () => {
 
-  const admin =
-  await User.findOne({
-    email: ADMIN_EMAIL
-  });
+  for (const account of ADMIN_ACCOUNTS) {
 
-  const hashedPassword =
-  await bcrypt.hash(ADMIN_PASSWORD, 10);
+    const hashedPassword =
+    await bcrypt.hash(account.password, 10);
 
-  if (!admin) {
-
-    await User.create({
-      name: ADMIN_NAME,
-      email: ADMIN_EMAIL,
-      password: hashedPassword,
-      role: "admin"
+    const admin =
+    await User.findOne({
+      email: account.email
     });
 
-    console.log("Admin user created");
+    if (!admin) {
 
-    return;
+      await User.create({
+        name: account.name,
+        email: account.email,
+        password: hashedPassword,
+        role: "admin"
+      });
+
+      continue;
+
+    }
+
+    admin.name = account.name;
+    admin.password = hashedPassword;
+    admin.role = "admin";
+
+    await admin.save();
 
   }
 
-  admin.name = ADMIN_NAME;
-  admin.password = hashedPassword;
-  admin.role = "admin";
-
-  await admin.save();
-
-  console.log("Admin user ready");
+  console.log("Admin users ready");
 
 };
 
@@ -235,7 +254,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
   console.log("MongoDB Connected");
 
-  return ensureAdminUser();
+  return ensureAdminUsers();
 
 })
 

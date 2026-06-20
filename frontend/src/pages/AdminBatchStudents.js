@@ -32,6 +32,22 @@ const formatDate = (value) =>
       })
     : "N/A";
 
+const buildWhatsAppUrl = (phone, message = "") => {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+
+  const indianNumber =
+    digits.startsWith("91") && digits.length >= 12
+      ? digits
+      : digits.startsWith("0") && digits.length > 10
+        ? `91${digits.slice(1)}`
+        : digits.length === 10
+          ? `91${digits}`
+          : digits;
+
+  return `https://wa.me/${indianNumber}${message ? `?text=${encodeURIComponent(message)}` : ""}`;
+};
+
 function AdminBatchStudents() {
   const { batch } = useParams();
   const navigate = useNavigate();
@@ -341,8 +357,12 @@ function AdminBatchStudents() {
 
   const sendReminder = (student) => {
     const message = `Hello ${student.studentName}, this is a reminder from Swami Coaching Classes for your ${student.feeStatus === "paid" ? "next class update" : "pending fee payment"}.`;
-    const phone = String(student.phone || "").replace(/\D/g, "");
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+    const url = buildWhatsAppUrl(student.phone, message);
+    if (!url) {
+      alert("Student phone number is missing");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const copyReminder = async (student) => {
@@ -878,7 +898,7 @@ function AdminBatchStudents() {
                         Copy
                       </button>
                       <a
-                        href={`https://wa.me/${String(student.phone || "").replace(/\D/g, "")}`}
+                        href={buildWhatsAppUrl(student.phone)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 font-bold text-white shadow-md transition hover:bg-emerald-600"
