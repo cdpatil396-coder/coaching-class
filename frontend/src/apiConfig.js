@@ -4,6 +4,6 @@ const isLocalhost =
 
 const API_URL = isLocalhost
   ? "http://localhost:5000"
-  : "https://swami-backend-jafr.onrender.com";
+  : "https://swami-backend-jarf.onrender.com";
 
 export default API_URL;
