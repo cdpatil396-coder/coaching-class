@@ -27,6 +27,7 @@ function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const flowNotice = localStorage.getItem("flowNotice");
 
   const handleChange = (e) => {
@@ -39,6 +40,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setSubmitError("");
 
     try {
       const contact = formData.contact.trim();
@@ -86,8 +88,13 @@ function Register() {
       );
       navigate("/login");
     } catch (error) {
-      const apiMessage = error.response?.data?.message || error.response?.data?.error;
-      alert(apiMessage || "Registration Failed");
+      const apiMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Registration Failed";
+      setSubmitError(apiMessage);
+      alert(apiMessage);
     } finally {
       setLoading(false);
     }
@@ -103,6 +110,17 @@ function Register() {
             className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 shadow-lg"
           >
             {flowNotice}
+          </motion.div>
+        )}
+
+        {submitError && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800 shadow-lg"
+          >
+            <p className="font-bold">Registration failed</p>
+            <p className="mt-1 break-words">{submitError}</p>
           </motion.div>
         )}
 
