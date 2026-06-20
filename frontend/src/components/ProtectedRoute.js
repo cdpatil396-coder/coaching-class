@@ -7,14 +7,26 @@ function ProtectedRoute({
 
   const token = localStorage.getItem("token");
 
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  let user = null;
+
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (error) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return <Navigate to="/login" replace />;
+  }
 
   if (!token) {
 
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
 
+  }
+
+  if (!user || !["admin", "student"].includes(user.role)) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return <Navigate to="/login" replace />;
   }
 
   if (role && user?.role !== role) {
@@ -22,6 +34,7 @@ function ProtectedRoute({
     return (
       <Navigate
         to={user?.role === "admin" ? "/admin" : "/dashboard"}
+        replace
       />
     );
 

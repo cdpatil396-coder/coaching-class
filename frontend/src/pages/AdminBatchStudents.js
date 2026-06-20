@@ -60,6 +60,10 @@ function AdminBatchStudents() {
   });
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const fetchAdmissions = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -70,6 +74,12 @@ function AdminBatchStudents() {
       });
       setAdmissions(res.data);
     } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
       console.log(error);
     }
   }, []);
@@ -87,6 +97,12 @@ function AdminBatchStudents() {
       );
       setAssignments(res.data);
     } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
       console.log(error);
     }
   }, [batch]);
@@ -315,6 +331,14 @@ function AdminBatchStudents() {
     const receipt = window.open("", "_blank", "width=700,height=900");
     if (!receipt) return;
 
+    const escapeHtml = (value) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
     receipt.document.write(`
       <html>
         <head>
@@ -331,13 +355,13 @@ function AdminBatchStudents() {
           <div class="card">
             <h1>Fee Receipt</h1>
             <div class="muted">Swami Coaching Classes</div>
-            <div class="row"><strong>Receipt No</strong><span>${student.receiptNo || "Pending"}</span></div>
-            <div class="row"><strong>Student</strong><span>${student.studentName}</span></div>
-            <div class="row"><strong>Phone</strong><span>${student.phone}</span></div>
-            <div class="row"><strong>Class</strong><span>${student.studentClass}</span></div>
-            <div class="row"><strong>Courses</strong><span>${(student.courses || []).join(", ")}</span></div>
-            <div class="row"><strong>Status</strong><span>${student.feeStatus || "pending"}</span></div>
-            <div class="row"><strong>Paid At</strong><span>${student.paidAt ? new Date(student.paidAt).toLocaleString() : "N/A"}</span></div>
+            <div class="row"><strong>Receipt No</strong><span>${escapeHtml(student.receiptNo || "Pending")}</span></div>
+            <div class="row"><strong>Student</strong><span>${escapeHtml(student.studentName)}</span></div>
+            <div class="row"><strong>Phone</strong><span>${escapeHtml(student.phone)}</span></div>
+            <div class="row"><strong>Class</strong><span>${escapeHtml(student.studentClass)}</span></div>
+            <div class="row"><strong>Courses</strong><span>${escapeHtml((student.courses || []).join(", "))}</span></div>
+            <div class="row"><strong>Status</strong><span>${escapeHtml(student.feeStatus || "pending")}</span></div>
+            <div class="row"><strong>Paid At</strong><span>${escapeHtml(student.paidAt ? new Date(student.paidAt).toLocaleString() : "N/A")}</span></div>
           </div>
           <script>window.print();</script>
         </body>

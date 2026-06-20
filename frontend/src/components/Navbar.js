@@ -10,15 +10,23 @@ import {
   FaTimes
 } from "react-icons/fa";
 
+const safeParseUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch (error) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return null;
+  }
+};
+
 function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
   const token = localStorage.getItem("token");
 
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  const user = safeParseUser();
 
   return (
 

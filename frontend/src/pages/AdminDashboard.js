@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -23,18 +23,13 @@ function AdminDashboard() {
   const [batchFilter, setBatchFilter] = useState("all");
   const [feeFilter, setFeeFilter] = useState("all");
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
-    window.location.reload();
-  };
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
-  useEffect(() => {
-    fetchAdmissions();
-  }, []);
-
-  const fetchAdmissions = async () => {
+  const fetchAdmissions = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`${API_URL}/api/admissions`, {
@@ -44,11 +39,23 @@ function AdminDashboard() {
       });
       setAdmissions(res.data);
     } catch (error) {
+      if (error.response?.status === 401) {
+        logout();
+        return;
+      }
       console.log(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
+
+  useEffect(() => {
+    fetchAdmissions();
+  }, [fetchAdmissions]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const stats = useMemo(() => {
     const pending = admissions.filter((item) => item.feeStatus !== "paid").length;

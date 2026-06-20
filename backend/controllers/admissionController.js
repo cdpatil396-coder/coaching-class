@@ -50,6 +50,19 @@ async (req, res) => {
       });
     }
 
+    const duplicateAdmission = await Admission.findOne({
+      $or: [
+        phone ? { phone } : null,
+        email ? { email } : null
+      ].filter(Boolean)
+    });
+
+    if (duplicateAdmission) {
+      return res.status(409).json({
+        message: "Admission already exists for this phone or email"
+      });
+    }
+
     const admission = await Admission.create({
       ...req.body,
       studentName: normalizeString(req.body.studentName),

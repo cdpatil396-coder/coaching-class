@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,12 +14,32 @@ import {
 } from "react-icons/fa";
 import API_URL from "../apiConfig";
 
+const safeParseUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch (error) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return null;
+  }
+};
+
 function Dashboard() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = safeParseUser();
   const [admission, setAdmission] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     const fetchAdmission = async () => {
@@ -42,6 +62,10 @@ function Dashboard() {
         );
         setAssignments(assignmentRes.data);
       } catch (error) {
+        if (error.response?.status === 401) {
+          logout();
+          return;
+        }
         setAdmission(null);
       } finally {
         setLoading(false);
@@ -49,13 +73,7 @@ function Dashboard() {
     };
 
     fetchAdmission();
-  }, []);
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  }, [logout]);
 
   const latestTest =
     admission?.testResults && admission.testResults.length

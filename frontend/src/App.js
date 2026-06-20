@@ -3,6 +3,7 @@ import {
   Routes,
   Route
 } from "react-router-dom";
+import { useEffect } from "react";
 
 import Navbar from "./components/Navbar";
 import WhatsAppButton from "./components/WhatsAppButton";
@@ -30,6 +31,11 @@ import AdminBatchStudents from "./pages/AdminBatchStudents";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
 
   return (
 

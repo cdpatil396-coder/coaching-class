@@ -38,8 +38,9 @@ function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       alert("Login Successful");
-      navigate(res.data.user?.role === "admin" ? "/admin" : "/dashboard");
-      window.location.reload();
+      navigate(res.data.user?.role === "admin" ? "/admin" : "/dashboard", {
+        replace: true
+      });
     } catch (error) {
       alert(error.response?.data?.message || "Login Failed");
     } finally {
