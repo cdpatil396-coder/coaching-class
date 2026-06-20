@@ -113,6 +113,7 @@ function Dashboard() {
               color: #0f172a;
             }
             .sheet {
+              position: relative;
               max-width: 760px;
               margin: 0 auto;
               background: white;
@@ -120,6 +121,27 @@ function Dashboard() {
               padding: 32px;
               box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
               border: 1px solid #e2e8f0;
+              overflow: hidden;
+            }
+            .watermark {
+              position: absolute;
+              inset: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 84px;
+              font-weight: 900;
+              letter-spacing: 0.18em;
+              color: rgba(29, 78, 216, 0.05);
+              transform: rotate(-18deg);
+              pointer-events: none;
+              user-select: none;
+              z-index: 0;
+              white-space: nowrap;
+            }
+            .content {
+              position: relative;
+              z-index: 1;
             }
             .top {
               display: flex;
@@ -129,6 +151,24 @@ function Dashboard() {
               border-bottom: 2px solid #e2e8f0;
               padding-bottom: 20px;
               margin-bottom: 24px;
+            }
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 14px;
+            }
+            .brand-mark {
+              width: 60px;
+              height: 60px;
+              border-radius: 18px;
+              background: linear-gradient(135deg, #2563eb, #4f46e5);
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 18px;
+              font-weight: 800;
+              box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
             }
             h1 {
               margin: 0;
@@ -142,10 +182,12 @@ function Dashboard() {
             .badge {
               padding: 10px 16px;
               border-radius: 999px;
-              background: #dcfce7;
+              background: linear-gradient(135deg, #dcfce7, #bbf7d0);
               color: #166534;
-              font-weight: 700;
+              font-weight: 800;
               white-space: nowrap;
+              border: 1px solid #86efac;
+              box-shadow: 0 10px 24px rgba(22, 101, 52, 0.1);
             }
             .grid {
               display: grid;
@@ -181,6 +223,50 @@ function Dashboard() {
               color: #64748b;
               font-size: 12px;
             }
+            .sign-row {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 16px;
+              margin-top: 24px;
+              align-items: end;
+            }
+            .sign-box {
+              min-height: 86px;
+              border-top: 1px solid #cbd5e1;
+              padding-top: 12px;
+              color: #475569;
+            }
+            .sign-title {
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.12em;
+              font-weight: 700;
+              color: #64748b;
+            }
+            .stamp {
+              justify-self: end;
+              width: 140px;
+              height: 140px;
+              border: 3px solid #16a34a;
+              border-radius: 999px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              color: #15803d;
+              font-weight: 900;
+              transform: rotate(-10deg);
+              background: rgba(34, 197, 94, 0.04);
+              box-shadow: inset 0 0 0 6px rgba(34, 197, 94, 0.08);
+            }
+            .stamp small {
+              font-size: 11px;
+              letter-spacing: 0.2em;
+            }
+            .stamp span {
+              margin-top: 8px;
+              font-size: 28px;
+            }
             @media print {
               body {
                 background: white;
@@ -196,67 +282,87 @@ function Dashboard() {
         </head>
         <body>
           <div class="sheet">
-            <div class="top">
-              <div>
-                <h1>Paid Fee Receipt</h1>
-                <div class="sub">Swami Coaching Classes</div>
-                <div class="sub">A clean payment receipt for student records</div>
+            <div class="watermark">SWAMI COACHING CLASSES</div>
+            <div class="content">
+              <div class="top">
+                <div class="brand">
+                  <div class="brand-mark">SC</div>
+                  <div>
+                    <h1>Paid Fee Receipt</h1>
+                    <div class="sub">Swami Coaching Classes</div>
+                    <div class="sub">Official payment receipt for student records</div>
+                  </div>
+                </div>
+                <div class="badge">PAID</div>
               </div>
-              <div class="badge">PAID</div>
-            </div>
 
-            <div class="grid">
-              <div class="item">
-                <div class="label">Receipt No</div>
-                <div class="value">${escapeHtml(admission.receiptNo || "Pending")}</div>
+              <div class="grid">
+                <div class="item">
+                  <div class="label">Receipt No</div>
+                  <div class="value">${escapeHtml(admission.receiptNo || "Pending")}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Paid On</div>
+                  <div class="value">${escapeHtml(
+                    admission.paidAt ? new Date(admission.paidAt).toLocaleString() : "Not available"
+                  )}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Student Name</div>
+                  <div class="value">${escapeHtml(admission.studentName)}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Phone</div>
+                  <div class="value">${escapeHtml(admission.phone)}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Class</div>
+                  <div class="value">${escapeHtml(admission.studentClass)}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Admission Date</div>
+                  <div class="value">${escapeHtml(formatDate(admission.admissionDate || admission.createdAt))}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Courses</div>
+                  <div class="value">${escapeHtml((admission.courses || []).join(", ") || "Not selected")}</div>
+                </div>
+                <div class="item">
+                  <div class="label">Fee Status</div>
+                  <div class="value">${escapeHtml(
+                    admission.feeStatus ? admission.feeStatus.charAt(0).toUpperCase() + admission.feeStatus.slice(1) : "Pending"
+                  )}</div>
+                </div>
               </div>
-              <div class="item">
-                <div class="label">Paid On</div>
-                <div class="value">${escapeHtml(
-                  admission.paidAt ? new Date(admission.paidAt).toLocaleString() : "Not available"
-                )}</div>
-              </div>
-              <div class="item">
-                <div class="label">Student Name</div>
-                <div class="value">${escapeHtml(admission.studentName)}</div>
-              </div>
-              <div class="item">
-                <div class="label">Phone</div>
-                <div class="value">${escapeHtml(admission.phone)}</div>
-              </div>
-              <div class="item">
-                <div class="label">Class</div>
-                <div class="value">${escapeHtml(admission.studentClass)}</div>
-              </div>
-              <div class="item">
-                <div class="label">Admission Date</div>
-                <div class="value">${escapeHtml(formatDate(admission.admissionDate || admission.createdAt))}</div>
-              </div>
-              <div class="item">
-                <div class="label">Courses</div>
-                <div class="value">${escapeHtml((admission.courses || []).join(", ") || "Not selected")}</div>
-              </div>
-              <div class="item">
-                <div class="label">Fee Status</div>
-                <div class="value">${escapeHtml(
-                  admission.feeStatus ? admission.feeStatus.charAt(0).toUpperCase() + admission.feeStatus.slice(1) : "Pending"
-                )}</div>
-              </div>
-            </div>
 
-            <div class="grid" style="margin-top: 16px;">
-              <div class="item" style="grid-column: 1 / -1;">
-                <div class="label">Address</div>
-                <div class="value">${escapeHtml(admission.address || "Not provided")}</div>
+              <div class="grid" style="margin-top: 16px;">
+                <div class="item" style="grid-column: 1 / -1;">
+                  <div class="label">Address</div>
+                  <div class="value">${escapeHtml(admission.address || "Not provided")}</div>
+                </div>
               </div>
-            </div>
 
-            <div class="footer">
-              <div>
-                <div>Generated automatically for student dashboard.</div>
-                <div>Keep this receipt for your records.</div>
+              <div class="sign-row">
+                <div class="sign-box">
+                  <div class="sign-title">Authorized Signature</div>
+                  <div style="margin-top: 30px;">________________________</div>
+                </div>
+                <div class="stamp">
+                  <small>OFFICIAL</small>
+                  <span>PAID</span>
+                </div>
               </div>
-              <div>Swami Coaching Classes</div>
+
+              <div class="footer">
+                <div>
+                  <div>Generated automatically for student dashboard.</div>
+                  <div>Keep this receipt for your records.</div>
+                </div>
+                <div>
+                  <div>Receipt generated: ${escapeHtml(new Date().toLocaleString())}</div>
+                  <div>Swami Coaching Classes</div>
+                </div>
+              </div>
             </div>
           </div>
           <script>
