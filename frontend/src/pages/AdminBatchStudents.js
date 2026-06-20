@@ -21,6 +21,7 @@ function AdminBatchStudents() {
   const { batch } = useParams();
   const [admissions, setAdmissions] = useState([]);
   const [search, setSearch] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState(null);
   const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
     studentName: "",
@@ -70,6 +71,13 @@ function AdminBatchStudents() {
     const pending = total - paid;
     return { total, paid, pending };
   }, [filteredAdmissions]);
+
+  const courseAdmissions = useMemo(() => {
+    if (!selectedCourse) return [];
+    return filteredAdmissions.filter((student) =>
+      (student.courses || []).includes(selectedCourse)
+    );
+  }, [filteredAdmissions, selectedCourse]);
 
   const startEdit = (student) => {
     setEditingStudent(student);
@@ -241,7 +249,7 @@ function AdminBatchStudents() {
                 Course wise view
               </p>
               <h2 className="mt-2 text-2xl font-black text-slate-900">
-                Students appear in every selected course
+                Tap a course to open the full admission list
               </h2>
             </div>
           </div>
@@ -251,34 +259,78 @@ function AdminBatchStudents() {
               const courseStudents = filteredAdmissions.filter((student) =>
                 (student.courses || []).includes(course)
               );
+              const isActive = selectedCourse === course;
               return (
-                <div
+                <button
                   key={course}
-                  className="rounded-3xl border border-slate-100 bg-slate-50 p-5"
+                  type="button"
+                  onClick={() => setSelectedCourse(course)}
+                  className={`rounded-3xl border p-5 text-left transition ${
+                    isActive
+                      ? "border-blue-500 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl"
+                      : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-blue-50"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-xl font-black text-slate-900">{course}</h3>
-                    <span className="rounded-full bg-blue-600 px-3 py-1 text-sm font-bold text-white">
+                    <h3 className="text-xl font-black">{course}</h3>
+                    <span className={`rounded-full px-3 py-1 text-sm font-bold ${
+                      isActive ? "bg-white text-blue-700" : "bg-blue-600 text-white"
+                    }`}>
                       {courseStudents.length}
                     </span>
                   </div>
-                  <div className="mt-4 space-y-3">
-                    {courseStudents.slice(0, 4).map((student) => (
-                      <div
-                        key={student._id}
-                        className="rounded-2xl bg-white px-4 py-3 shadow-sm"
-                      >
-                        <p className="font-bold text-slate-900">{student.studentName}</p>
-                        <p className="text-sm text-slate-500">{student.phone}</p>
-                      </div>
-                    ))}
-                    {!courseStudents.length && (
-                      <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500">
-                        No students selected this course yet.
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  <p className={`mt-3 text-sm ${isActive ? "text-white/80" : "text-slate-500"}`}>
+                    {courseStudents.length
+                      ? "Click to view and manage every admission in this subject"
+                      : "No admissions selected for this subject yet"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-2xl">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
+                {selectedCourse ? "Subject list" : "Student records"}
+              </p>
+              <h2 className="mt-2 text-2xl font-black text-slate-900">
+                {selectedCourse
+                  ? `${selectedCourse} admissions in ${batch}`
+                  : `All admissions in ${batch}`}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCourse(null)}
+              className="w-fit rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+            >
+              Show all subjects
+            </button>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {COURSE_OPTIONS.map((course) => {
+              const active = selectedCourse === course;
+              const count = filteredAdmissions.filter((student) =>
+                (student.courses || []).includes(course)
+              ).length;
+              return (
+                <button
+                  type="button"
+                  key={course}
+                  onClick={() => setSelectedCourse(course)}
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                    active
+                      ? "bg-blue-700 text-white shadow-lg"
+                      : "bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                  }`}
+                >
+                  {course} <span className="ml-1 opacity-70">({count})</span>
+                </button>
               );
             })}
           </div>
@@ -286,7 +338,7 @@ function AdminBatchStudents() {
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
-            {filteredAdmissions.map((student) => {
+            {(selectedCourse ? courseAdmissions : filteredAdmissions).map((student) => {
               const active = editingStudent?._id === student._id;
               return (
                 <div
@@ -328,7 +380,7 @@ function AdminBatchStudents() {
                         {(student.courses || []).map((course) => (
                           <span
                             key={course}
-                            className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white"
+                            className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-sm"
                           >
                             {course}
                           </span>
@@ -400,9 +452,11 @@ function AdminBatchStudents() {
               );
             })}
 
-            {!filteredAdmissions.length && (
+            {!(selectedCourse ? courseAdmissions : filteredAdmissions).length && (
               <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/80 p-8 text-center text-slate-500 shadow-lg">
-                No students found for this batch.
+                {selectedCourse
+                  ? `No ${selectedCourse} students found in ${batch}.`
+                  : `No students found for this batch.`}
               </div>
             )}
           </div>
