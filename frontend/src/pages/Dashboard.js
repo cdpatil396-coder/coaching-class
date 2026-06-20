@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FaBookOpen,
-  FaChartBar,
   FaEnvelope,
   FaHome,
   FaFileAlt,
@@ -85,11 +84,6 @@ function Dashboard() {
 
     fetchAdmission();
   }, [logout]);
-
-  const latestTest =
-    admission?.testResults && admission.testResults.length
-      ? admission.testResults[admission.testResults.length - 1]
-      : null;
 
   const downloadFeeReceipt = () => {
     if (!admission || admission.feeStatus !== "paid") return;
@@ -463,13 +457,6 @@ function Dashboard() {
                 value: admission.feeStatus
               },
               {
-                icon: <FaChartBar />,
-                label: "Latest Test",
-                value: latestTest
-                  ? `${latestTest.testName} - ${latestTest.score}/${latestTest.maxScore}`
-                  : "No test results"
-              },
-              {
                 icon: <FaHome />,
                 label: "Address",
                 value: admission.address || "Not provided"
@@ -613,11 +600,6 @@ function Dashboard() {
                       label: "Courses Selected",
                       value: `${admission.courses?.length || 0}`,
                       max: 3
-                    },
-                    {
-                      label: "Tests Completed",
-                      value: `${admission.testResults?.length || 0}`,
-                      max: 5
                     }
                   ].map((item) => (
                     <div key={item.label}>
