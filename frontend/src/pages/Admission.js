@@ -29,6 +29,24 @@ function Admission() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  const flowSteps = [
+    {
+      step: "01",
+      title: "Admission",
+      text: "Submit name, phone, class, and courses."
+    },
+    {
+      step: "02",
+      title: "Register",
+      text: "Create your account with email or phone."
+    },
+    {
+      step: "03",
+      title: "Login",
+      text: "Open your dashboard and student details."
+    }
+  ];
+
   const selectedCount = useMemo(
     () => formData.courses.length,
     [formData.courses]
@@ -79,6 +97,10 @@ function Admission() {
       alert(res.data.message);
 
       localStorage.setItem("admissionSubmitted", "true");
+      localStorage.setItem(
+        "flowNotice",
+        "Admission submitted successfully. Please create your account next."
+      );
       localStorage.setItem(
         "pendingAdmission",
         JSON.stringify({
@@ -158,6 +180,28 @@ function Admission() {
               </div>
             ))}
           </div>
+
+          <div className="border-t border-white/10 p-8">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/70">
+              Student flow
+            </p>
+            <div className="mt-5 grid gap-4">
+              {flowSteps.map((item) => (
+                <div
+                  key={item.step}
+                  className="flex items-start gap-4 rounded-3xl bg-white/5 p-4"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-300/20 text-sm font-black text-cyan-200">
+                    {item.step}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                    <p className="text-sm text-white/70">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
         <motion.form
@@ -177,6 +221,9 @@ function Admission() {
             <p className="mt-2 text-sm text-slate-600">
               Selected courses: <span className="font-bold text-blue-700">{selectedCount}</span>
             </p>
+            <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              After admission, we will take you to registration so you can access the student dashboard.
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -283,7 +330,7 @@ function Admission() {
             disabled={submitting}
             className="mt-8 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 text-lg font-bold text-white shadow-xl transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {submitting ? "Submitting..." : "Submit Admission"}
+            {submitting ? "Submitting..." : "Submit Admission and Continue"}
           </button>
         </motion.form>
       </div>

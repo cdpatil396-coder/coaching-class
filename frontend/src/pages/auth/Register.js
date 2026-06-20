@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   FaEnvelope,
   FaLock,
@@ -26,6 +27,7 @@ function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const flowNotice = localStorage.getItem("flowNotice");
 
   const handleChange = (e) => {
     setFormData({
@@ -72,6 +74,10 @@ function Register() {
       alert(res.data.message);
       localStorage.removeItem("pendingAdmission");
       localStorage.removeItem("admissionSubmitted");
+      localStorage.setItem(
+        "flowNotice",
+        "Registration successful. Log in to open your student dashboard."
+      );
       navigate("/login");
     } catch (error) {
       const apiMessage = error.response?.data?.message || error.response?.data?.error;
@@ -83,10 +89,21 @@ function Register() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe,_#f8fafc_45%,_#ecfccb_100%)] px-4 py-10 flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-2xl backdrop-blur-xl"
-      >
+      <div className="w-full max-w-md">
+        {flowNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 shadow-lg"
+          >
+            {flowNotice}
+          </motion.div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-2xl backdrop-blur-xl"
+        >
         <div className="mb-8 text-center">
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-700">
             Create account
@@ -97,6 +114,9 @@ function Register() {
           <p className="mt-2 text-sm text-slate-600">
             Register with email or phone number.
           </p>
+          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            Next step after registering: log in and open your dashboard.
+          </div>
         </div>
 
         <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -165,9 +185,10 @@ function Register() {
           disabled={loading}
           className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 py-4 font-bold text-white shadow-xl transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {loading ? "Registering..." : "Register"}
+          {loading ? "Registering..." : "Create Account"}
         </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

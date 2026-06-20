@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   FaEnvelope,
   FaLock,
@@ -10,6 +11,7 @@ import API_URL from "../../apiConfig";
 
 function Login() {
   const navigate = useNavigate();
+  const flowNotice = localStorage.getItem("flowNotice");
   const [formData, setFormData] = useState({
     identifier: "",
     password: ""
@@ -40,6 +42,7 @@ function Login() {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.removeItem("flowNotice");
 
       alert("Login Successful");
       navigate(res.data.user?.role === "admin" ? "/admin" : "/dashboard", {
@@ -54,10 +57,21 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe,_#f8fafc_45%,_#ecfeff_100%)] px-4 py-10 flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-2xl backdrop-blur-xl"
-      >
+      <div className="w-full max-w-md">
+        {flowNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900 shadow-lg"
+          >
+            {flowNotice}
+          </motion.div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-2xl backdrop-blur-xl"
+        >
         <div className="mb-8 text-center">
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-blue-700">
             Welcome back
@@ -68,6 +82,9 @@ function Login() {
           <p className="mt-2 text-sm text-slate-600">
             Use your email or phone number to sign in.
           </p>
+          <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            After login, your dashboard opens automatically with your admission details.
+          </div>
         </div>
 
         <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -118,9 +135,10 @@ function Login() {
           disabled={loading}
           className="w-full rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 py-4 font-bold text-white shadow-xl transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {loading ? "Signing in..." : "Login"}
+          {loading ? "Signing in..." : "Open Dashboard"}
         </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
