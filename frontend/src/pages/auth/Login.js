@@ -85,9 +85,6 @@ function Login() {
           <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
             After login, your dashboard opens automatically with your admission details.
           </div>
-          <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Admin access: use <span className="font-bold">swamicoaching396@gmail.com</span> to open the admin panel.
-          </div>
         </div>
 
         <label className="mb-2 block text-sm font-semibold text-slate-700">
