@@ -20,6 +20,9 @@ require("./routes/authRoutes");
 const admissionRoutes =
 require("./routes/admissionRoutes");
 
+const educationRoutes =
+require("./routes/educationRoutes");
+
 const User =
 require("./models/User");
 
@@ -92,6 +95,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 
 app.use("/api/admissions", admissionRoutes);
+
+app.use("/api/education", educationRoutes);
 
 /* Test Route */
 

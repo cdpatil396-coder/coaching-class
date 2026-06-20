@@ -26,6 +26,14 @@ const normalizeCourses = (courses) => {
 const normalizeNotes = (value) =>
   typeof value === "string" ? value.trim() : "";
 
+const normalizePhotoData = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const normalizeHistoryDate = (value) =>
+  typeof value === "string" && value.trim()
+    ? value.trim()
+    : new Date().toISOString().slice(0, 10);
+
 /* Create Admission */
 
 exports.createAdmission =
@@ -51,6 +59,7 @@ async (req, res) => {
       courses,
       address: normalizeString(req.body.address),
       notes: normalizeNotes(req.body.notes),
+      photoData: normalizePhotoData(req.body.photoData),
       feeStatus: req.body.feeStatus || "pending"
     });
 
@@ -189,10 +198,37 @@ async (req, res) => {
       notes: req.body.notes !== undefined
         ? normalizeNotes(req.body.notes)
         : req.body.notes,
+      photoData: req.body.photoData !== undefined
+        ? normalizePhotoData(req.body.photoData)
+        : req.body.photoData,
       feeStatus: req.body.feeStatus === "pending" || req.body.feeStatus === "paid"
         ? req.body.feeStatus
         : undefined
     };
+
+    if (req.body.attendanceMark) {
+      payload.$push = payload.$push || {};
+      payload.$push.attendanceHistory = {
+        date: normalizeHistoryDate(req.body.attendanceMark.date),
+        status:
+          req.body.attendanceMark.status === "absent"
+            ? "absent"
+            : "present"
+      };
+      delete payload.attendanceMark;
+    }
+
+    if (req.body.testResult) {
+      payload.$push = payload.$push || {};
+      payload.$push.testResults = {
+        testName: normalizeString(req.body.testResult.testName),
+        course: normalizeString(req.body.testResult.course),
+        score: Number(req.body.testResult.score || 0),
+        maxScore: Number(req.body.testResult.maxScore || 100),
+        date: normalizeHistoryDate(req.body.testResult.date)
+      };
+      delete payload.testResult;
+    }
 
     if (Array.isArray(payload.courses) && !payload.courses.length) {
       return res.status(400).json({
@@ -201,6 +237,7 @@ async (req, res) => {
     }
 
     Object.keys(payload).forEach((key) => {
+      if (key === "$push") return;
       if (payload[key] === undefined) {
         delete payload[key];
       }
@@ -211,13 +248,24 @@ async (req, res) => {
 
       req.params.id,
 
-      payload,
+      payload.$push
+        ? {
+            ...payload,
+            $push: payload.$push
+          }
+        : payload,
 
       {
         new: true
       }
 
     );
+
+    if (updatedStudent && updatedStudent.feeStatus === "paid" && !updatedStudent.receiptNo) {
+      updatedStudent.receiptNo = `RCPT-${updatedStudent._id.toString().slice(-6).toUpperCase()}`;
+      updatedStudent.paidAt = updatedStudent.paidAt || new Date();
+      await updatedStudent.save();
+    }
 
     res.json(updatedStudent);
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,12 +7,17 @@ import {
   FaArrowLeft,
   FaCheckCircle,
   FaCopy,
+  FaCalendarCheck,
   FaEdit,
   FaDownload,
+  FaFileAlt,
+  FaBullhorn,
+  FaImage,
   FaPhoneAlt,
   FaRegCreditCard,
   FaSave,
   FaSearch,
+  FaSortAmountDown,
   FaWhatsapp,
   FaTrash
 } from "react-icons/fa";
@@ -26,6 +31,8 @@ function AdminBatchStudents() {
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [feeFilter, setFeeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [assignments, setAssignments] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
     studentName: "",
@@ -35,15 +42,25 @@ function AdminBatchStudents() {
     courses: [],
     address: "",
     notes: "",
+    photoData: "",
     feeStatus: "pending"
+  });
+  const [assignmentForm, setAssignmentForm] = useState({
+    title: "",
+    description: "",
+    course: COURSE_OPTIONS[0],
+    dueDate: ""
+  });
+  const [testForm, setTestForm] = useState({
+    testName: "",
+    course: COURSE_OPTIONS[0],
+    score: "",
+    maxScore: "100",
+    date: new Date().toISOString().slice(0, 10)
   });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchAdmissions();
-  }, []);
-
-  const fetchAdmissions = async () => {
+  const fetchAdmissions = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`${API_URL}/api/admissions`, {
@@ -55,11 +72,33 @@ function AdminBatchStudents() {
     } catch (error) {
       console.log(error);
     }
-  };
+  }, []);
+
+  const fetchAssignments = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${API_URL}/api/education/assignments?batch=${batch}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      setAssignments(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }, [batch]);
+
+  useEffect(() => {
+    fetchAdmissions();
+    fetchAssignments();
+  }, [fetchAdmissions, fetchAssignments]);
 
   const filteredAdmissions = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    return admissions.filter((student) => {
+    const sorted = admissions.filter((student) => {
       const matchesBatch = student.studentClass === batch;
       const matchesSearch =
         !normalizedSearch ||
@@ -72,7 +111,16 @@ function AdminBatchStudents() {
         (feeFilter === "pending" && student.feeStatus !== "paid");
       return matchesBatch && matchesSearch && matchesFee;
     });
-  }, [admissions, batch, feeFilter, search]);
+    return sorted.sort((a, b) => {
+      if (sortBy === "name") {
+        return (a.studentName || "").localeCompare(b.studentName || "");
+      }
+      if (sortBy === "paid") {
+        return (a.feeStatus || "").localeCompare(b.feeStatus || "");
+      }
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }, [admissions, batch, feeFilter, search, sortBy]);
 
   const stats = useMemo(() => {
     const total = filteredAdmissions.length;
@@ -98,6 +146,7 @@ function AdminBatchStudents() {
       courses: Array.isArray(student.courses) ? student.courses : [],
       address: student.address || "",
       notes: student.notes || "",
+      photoData: student.photoData || "",
       feeStatus: student.feeStatus || "pending"
     });
   };
@@ -108,6 +157,20 @@ function AdminBatchStudents() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({
+        ...prev,
+        photoData: reader.result || ""
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleCourse = (course) => {
@@ -145,11 +208,154 @@ function AdminBatchStudents() {
       );
       setEditingStudent(null);
       fetchAdmissions();
+      fetchAssignments();
     } catch (error) {
       alert(error.response?.data?.message || "Update failed");
     } finally {
       setSaving(false);
     }
+  };
+
+  const markAttendance = async (student, status) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${API_URL}/api/admissions/${student._id}`,
+        {
+          attendanceMark: {
+            date: new Date().toISOString().slice(0, 10),
+            status
+          }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      fetchAdmissions();
+    } catch (error) {
+      alert(error.response?.data?.message || "Attendance update failed");
+    }
+  };
+
+  const addTestResult = async (e) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${API_URL}/api/admissions/${editingStudent._id}`,
+        {
+          testResult: testForm
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      setTestForm({
+        testName: "",
+        course: COURSE_OPTIONS[0],
+        score: "",
+        maxScore: "100",
+        date: new Date().toISOString().slice(0, 10)
+      });
+      fetchAdmissions();
+    } catch (error) {
+      alert(error.response?.data?.message || "Test save failed");
+    }
+  };
+
+  const createAssignment = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/api/education/assignments`,
+        {
+          ...assignmentForm,
+          batch
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      setAssignmentForm({
+        title: "",
+        description: "",
+        course: COURSE_OPTIONS[0],
+        dueDate: ""
+      });
+      fetchAssignments();
+    } catch (error) {
+      alert(error.response?.data?.message || "Assignment save failed");
+    }
+  };
+
+  const deleteAssignment = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/api/education/assignments/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      fetchAssignments();
+    } catch (error) {
+      alert(error.response?.data?.message || "Assignment delete failed");
+    }
+  };
+
+  const openReceipt = (student) => {
+    const receipt = window.open("", "_blank", "width=700,height=900");
+    if (!receipt) return;
+
+    receipt.document.write(`
+      <html>
+        <head>
+          <title>Receipt ${student.receiptNo || student._id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 32px; color: #0f172a; }
+            .card { border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; }
+            h1 { margin: 0 0 12px; font-size: 28px; }
+            .muted { color: #64748b; }
+            .row { margin: 10px 0; display: flex; justify-content: space-between; gap: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>Fee Receipt</h1>
+            <div class="muted">Swami Coaching Classes</div>
+            <div class="row"><strong>Receipt No</strong><span>${student.receiptNo || "Pending"}</span></div>
+            <div class="row"><strong>Student</strong><span>${student.studentName}</span></div>
+            <div class="row"><strong>Phone</strong><span>${student.phone}</span></div>
+            <div class="row"><strong>Class</strong><span>${student.studentClass}</span></div>
+            <div class="row"><strong>Courses</strong><span>${(student.courses || []).join(", ")}</span></div>
+            <div class="row"><strong>Status</strong><span>${student.feeStatus || "pending"}</span></div>
+            <div class="row"><strong>Paid At</strong><span>${student.paidAt ? new Date(student.paidAt).toLocaleString() : "N/A"}</span></div>
+          </div>
+          <script>window.print();</script>
+        </body>
+      </html>
+    `);
+    receipt.document.close();
+  };
+
+  const sendReminder = (student) => {
+    const message = `Hello ${student.studentName}, this is a reminder from Swami Coaching Classes for your ${student.feeStatus === "paid" ? "next class update" : "pending fee payment"}.`;
+    const phone = String(student.phone || "").replace(/\D/g, "");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  const copyReminder = async (student) => {
+    const message = `Hello ${student.studentName}, this is a reminder from Swami Coaching Classes for your ${student.feeStatus === "paid" ? "next class update" : "pending fee payment"}.`;
+    await navigator.clipboard.writeText(message);
+    alert("Reminder message copied");
   };
 
   const deleteStudent = async (student) => {
@@ -383,7 +589,21 @@ function AdminBatchStudents() {
             </button>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+              <FaSortAmountDown className="text-blue-700" />
+              Sort
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent outline-none"
+              >
+                <option value="newest">Newest</option>
+                <option value="name">Name</option>
+                <option value="paid">Fee Status</option>
+              </select>
+            </label>
+
             {COURSE_OPTIONS.map((course) => {
               const active = selectedCourse === course;
               const count = filteredAdmissions.filter((student) =>
@@ -412,6 +632,131 @@ function AdminBatchStudents() {
               <FaDownload />
               Export CSV
             </button>
+          </div>
+        </div>
+
+        <div className="mb-8 grid gap-6 xl:grid-cols-2">
+          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3">
+              <FaFileAlt className="text-2xl text-blue-700" />
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
+                  Homework / Assignments
+                </p>
+                <h2 className="text-2xl font-black text-slate-900">
+                  Create class assignments
+                </h2>
+              </div>
+            </div>
+
+            <form onSubmit={createAssignment} className="space-y-3">
+              <input
+                value={assignmentForm.title}
+                onChange={(e) =>
+                  setAssignmentForm((prev) => ({ ...prev, title: e.target.value }))
+                }
+                placeholder="Assignment title"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                required
+              />
+              <textarea
+                value={assignmentForm.description}
+                onChange={(e) =>
+                  setAssignmentForm((prev) => ({ ...prev, description: e.target.value }))
+                }
+                placeholder="Assignment details"
+                rows="3"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              />
+              <div className="grid gap-3 md:grid-cols-3">
+                <select
+                  value={assignmentForm.course}
+                  onChange={(e) =>
+                    setAssignmentForm((prev) => ({ ...prev, course: e.target.value }))
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                >
+                  {COURSE_OPTIONS.map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="date"
+                  value={assignmentForm.dueDate}
+                  onChange={(e) =>
+                    setAssignmentForm((prev) => ({ ...prev, dueDate: e.target.value }))
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                />
+                <button
+                  type="submit"
+                  className="rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 px-4 py-3 font-bold text-white shadow-lg"
+                >
+                  Add Assignment
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-5 space-y-3">
+              {assignments.length ? (
+                assignments.map((item) => (
+                  <div
+                    key={item._id}
+                    className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
+                        <p className="text-sm text-slate-600">{item.course}</p>
+                        <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteAssignment(item._id)}
+                        className="rounded-xl bg-rose-500 px-3 py-2 text-sm font-bold text-white"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">No assignments yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3">
+              <FaCalendarCheck className="text-2xl text-blue-700" />
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
+                  Attendance
+                </p>
+                <h2 className="text-2xl font-black text-slate-900">
+                  Quick mark from student cards
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {[
+                { label: "Total", value: stats.total },
+                { label: "Paid", value: stats.paid },
+                { label: "Pending", value: stats.pending }
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-sm text-slate-500">{item.label}</p>
+                  <p className="text-3xl font-black text-slate-900">{item.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-blue-50 p-4 text-sm text-blue-900">
+              Mark Present / Absent on each student to build the attendance history.
+            </div>
           </div>
         </div>
 
@@ -471,6 +816,21 @@ function AdminBatchStudents() {
                           <span className="font-bold">Note:</span> {student.notes}
                         </p>
                       )}
+
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                          Receipt: {student.receiptNo || "Pending"}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                          Attendance:{" "}
+                          {student.attendanceHistory && student.attendanceHistory.length
+                            ? student.attendanceHistory[student.attendanceHistory.length - 1].status
+                            : "Not marked"}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                          Tests: {student.testResults?.length || 0}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -510,6 +870,49 @@ function AdminBatchStudents() {
                         <FaWhatsapp />
                         WhatsApp
                       </a>
+                      <button
+                        type="button"
+                        onClick={() => markAttendance(student, "present")}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-100 px-4 py-3 font-bold text-emerald-700 shadow-md transition hover:bg-emerald-200"
+                      >
+                        <FaCalendarCheck />
+                        Present
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => markAttendance(student, "absent")}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-rose-100 px-4 py-3 font-bold text-rose-700 shadow-md transition hover:bg-rose-200"
+                      >
+                        <FaCalendarCheck />
+                        Absent
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openReceipt(student)}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-bold text-slate-700 shadow-md transition hover:border-blue-300 hover:text-blue-700"
+                      >
+                        <FaDownload />
+                        Receipt
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingStudent(student);
+                          sendReminder(student);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-bold text-slate-700 shadow-md transition hover:border-blue-300 hover:text-blue-700"
+                      >
+                        <FaBullhorn />
+                        WhatsApp Reminder
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyReminder(student)}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-bold text-slate-700 shadow-md transition hover:border-blue-300 hover:text-blue-700"
+                      >
+                        <FaBullhorn />
+                        Copy Reminder
+                      </button>
                     </div>
                   </div>
 
@@ -671,6 +1074,27 @@ function AdminBatchStudents() {
                   placeholder="Notes"
                 />
 
+                <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4">
+                  <span className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <FaImage className="text-blue-700" />
+                    Student Photo
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="w-full text-sm text-slate-600"
+                  />
+                </label>
+
+                {formData.photoData && (
+                  <img
+                    src={formData.photoData}
+                    alt="Student preview"
+                    className="h-28 w-28 rounded-2xl object-cover shadow-md"
+                  />
+                )}
+
                 <div className="flex gap-3">
                   <button
                     type="submit"
@@ -687,6 +1111,87 @@ function AdminBatchStudents() {
                   >
                     Cancel
                   </button>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
+                    <FaFileAlt className="text-blue-700" />
+                    Add Test Result
+                  </p>
+                  <form onSubmit={addTestResult} className="space-y-3">
+                    <input
+                      value={testForm.testName}
+                      onChange={(e) =>
+                        setTestForm((prev) => ({ ...prev, testName: e.target.value }))
+                      }
+                      placeholder="Test name"
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                      required
+                    />
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <select
+                        value={testForm.course}
+                        onChange={(e) =>
+                          setTestForm((prev) => ({ ...prev, course: e.target.value }))
+                        }
+                        className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                      >
+                        {COURSE_OPTIONS.map((course) => (
+                          <option key={course} value={course}>
+                            {course}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={testForm.score}
+                        onChange={(e) =>
+                          setTestForm((prev) => ({ ...prev, score: e.target.value }))
+                        }
+                        placeholder="Score"
+                        className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                        required
+                      />
+                      <input
+                        type="number"
+                        value={testForm.maxScore}
+                        onChange={(e) =>
+                          setTestForm((prev) => ({ ...prev, maxScore: e.target.value }))
+                        }
+                        placeholder="Max score"
+                        className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                        required
+                      />
+                    </div>
+                    <input
+                      type="date"
+                      value={testForm.date}
+                      onChange={(e) =>
+                        setTestForm((prev) => ({ ...prev, date: e.target.value }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white"
+                    >
+                      Save Test Result
+                    </button>
+                  </form>
+
+                  <div className="mt-4 space-y-2">
+                    {(editingStudent.testResults || []).slice(0, 5).map((result, index) => (
+                      <div
+                        key={`${result.testName}-${index}`}
+                        className="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm"
+                      >
+                        <p className="font-bold text-slate-900">{result.testName}</p>
+                        <p className="text-slate-500">
+                          {result.course} | {result.score}/{result.maxScore} | {result.date}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </form>
             ) : (

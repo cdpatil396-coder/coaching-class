@@ -56,6 +56,23 @@ function AdminDashboard() {
     return { pending, paid };
   }, [admissions]);
 
+  const batchCounts = useMemo(
+    () =>
+      BATCHES.map((batch) => ({
+        label: batch,
+        value: admissions.filter((item) => item.studentClass === batch).length
+      })),
+    [admissions]
+  );
+
+  const courseCounts = useMemo(() => {
+    const courses = ["Mathematics", "Science", "English"];
+    return courses.map((course) => ({
+      label: course,
+      value: admissions.filter((item) => (item.courses || []).includes(course)).length
+    }));
+  }, [admissions]);
+
   const filteredAdmissions = useMemo(() => {
     const query = search.trim().toLowerCase();
     return admissions.filter((item) => {
@@ -146,6 +163,62 @@ function AdminDashboard() {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        <div className="mb-8 grid gap-6 xl:grid-cols-2">
+          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur-xl">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
+              Batch analytics
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-slate-900">
+              Student count by class
+            </h2>
+            <div className="mt-5 space-y-4">
+              {batchCounts.map((item) => (
+                <div key={item.label}>
+                  <div className="mb-2 flex items-center justify-between text-sm font-semibold text-slate-600">
+                    <span>{item.label}</span>
+                    <span>{item.value}</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-slate-100">
+                    <div
+                      className="h-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700"
+                      style={{
+                        width: `${Math.max(8, Math.min((item.value / Math.max(admissions.length, 1)) * 100, 100))}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur-xl">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
+              Course analytics
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-slate-900">
+              Popular subjects
+            </h2>
+            <div className="mt-5 space-y-4">
+              {courseCounts.map((item) => (
+                <div key={item.label}>
+                  <div className="mb-2 flex items-center justify-between text-sm font-semibold text-slate-600">
+                    <span>{item.label}</span>
+                    <span>{item.value}</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-slate-100">
+                    <div
+                      className="h-3 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-600"
+                      style={{
+                        width: `${Math.max(8, Math.min((item.value / Math.max(admissions.length, 1)) * 100, 100))}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="mb-8 rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur-xl">
