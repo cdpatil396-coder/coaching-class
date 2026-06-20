@@ -62,6 +62,7 @@ async (req, res) => {
       email: email || undefined,
       studentClass: normalizeString(req.body.studentClass),
       courses,
+      admissionDate: req.body.admissionDate ? new Date(req.body.admissionDate) : new Date(),
       address: normalizeString(req.body.address),
       notes: normalizeNotes(req.body.notes),
       feeStatus: req.body.feeStatus || "pending"

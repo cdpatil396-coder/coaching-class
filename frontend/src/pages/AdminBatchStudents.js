@@ -23,6 +23,15 @@ import {
 const COURSE_OPTIONS = ["Mathematics", "Science", "English"];
 const VALID_BATCHES = ["10th", "11th", "12th"];
 
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      })
+    : "N/A";
+
 function AdminBatchStudents() {
   const { batch } = useParams();
   const navigate = useNavigate();
@@ -805,6 +814,9 @@ function AdminBatchStudents() {
                         <span className="rounded-full bg-slate-100 px-3 py-1">
                           {student.courses?.length || 0} course(s)
                         </span>
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
+                          Admission: {formatDate(student.admissionDate || student.createdAt)}
+                        </span>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -984,6 +996,14 @@ function AdminBatchStudents() {
                     <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Receipt</p>
                     <p className="mt-1 truncate font-black text-slate-900">
                       {editingStudent.receiptNo || "Pending"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-100 px-4 py-3 sm:col-span-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      Admission date
+                    </p>
+                    <p className="mt-1 font-black text-slate-900">
+                      {formatDate(editingStudent.admissionDate || editingStudent.createdAt)}
                     </p>
                   </div>
                 </div>

@@ -29,6 +29,12 @@ const admissionSchema = new mongoose.Schema({
     required: true
   },
 
+  admissionDate: {
+    type: Date,
+    required: false,
+    default: Date.now
+  },
+
   feeStatus: {
     type: String,
     enum: ["pending", "paid"],

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   FaBookOpen,
   FaChartBar,
@@ -12,6 +13,9 @@ import {
   FaUserGraduate
 } from "react-icons/fa";
 import API_URL from "../apiConfig";
+
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "Not available";
 
 const safeParseUser = () => {
   try {
@@ -80,9 +84,27 @@ function Dashboard() {
       : null;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#ecfeff,_#f8fafc_45%,_#fff7ed_100%)] px-4 py-10">
-      <div className="mx-auto w-full max-w-6xl rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
-        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#ecfeff,_#f8fafc_45%,_#fff7ed_100%)] px-4 py-10">
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 h-72 w-72 rounded-full bg-blue-300/25 blur-3xl"
+        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 top-24 h-80 w-80 rounded-full bg-fuchsia-300/20 blur-3xl"
+        animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <div className="relative mx-auto w-full max-w-6xl rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between"
+        >
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
               Student Dashboard
@@ -90,6 +112,14 @@ function Dashboard() {
             <h1 className="mt-2 text-4xl font-black text-slate-900">
               Welcome {user?.name}
             </h1>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700">
+                Admission date: {formatDate(admission?.admissionDate || admission?.createdAt)}
+              </span>
+              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
+                Batch: {admission?.studentClass || "N/A"}
+              </span>
+            </div>
           </div>
 
           <button
@@ -98,13 +128,21 @@ function Dashboard() {
           >
             Logout
           </button>
-        </div>
+        </motion.div>
 
         {loading ? (
           <p className="text-slate-600">Loading your admission details...</p>
         ) : admission ? (
           <div className="space-y-6">
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <motion.div
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.08 } }
+              }}
+              className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+            >
             {[
               {
                 icon: <FaUserGraduate />,
@@ -152,25 +190,33 @@ function Dashboard() {
                   : "bg-white";
 
               return (
-                <div
+                <motion.div
                   key={item.label}
+                  variants={{
+                    hidden: { opacity: 0, y: 24 },
+                    show: { opacity: 1, y: 0 }
+                  }}
                   className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-blue-50 p-6 shadow-lg"
                 >
                   <div className="mb-4 text-3xl text-blue-700">{item.icon}</div>
-              <p className="text-sm font-semibold text-slate-500">{item.label}</p>
-              <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-lg font-bold ${statusColor}`}>
-                {item.label === "Fee Status"
-                  ? item.value.charAt(0).toUpperCase() + item.value.slice(1)
-                  : item.value}
-              </p>
-            </div>
-          );
-        })}
-
-            </div>
+                  <p className="text-sm font-semibold text-slate-500">{item.label}</p>
+                  <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-lg font-bold ${statusColor}`}>
+                    {item.label === "Fee Status"
+                      ? item.value.charAt(0).toUpperCase() + item.value.slice(1)
+                      : item.value}
+                  </p>
+                </motion.div>
+              );
+            })}
+            </motion.div>
 
             <div className="grid gap-5 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg"
+              >
                 <p className="text-sm font-semibold text-slate-500">Selected Courses</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   {(admission.courses || []).map((course) => (
@@ -187,9 +233,14 @@ function Dashboard() {
                     </span>
                   )}
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg"
+              >
                 <p className="text-sm font-semibold text-slate-500">Receipt</p>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div>
@@ -204,16 +255,27 @@ function Dashboard() {
                   </div>
                   <FaFileAlt className="text-4xl text-blue-700" />
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg"
+              >
                 <p className="text-sm font-semibold text-slate-500">Assignments</p>
                 <div className="mt-4 space-y-3">
                   {assignments.length ? (
                     assignments.map((assignment) => (
-                      <div key={assignment._id} className="rounded-2xl bg-slate-50 p-4">
+                      <motion.div
+                        key={assignment._id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35 }}
+                        className="rounded-2xl bg-slate-50 p-4"
+                      >
                         <p className="font-bold text-slate-900">{assignment.title}</p>
                         <p className="text-sm text-slate-600">{assignment.course}</p>
                         <p className="text-sm text-slate-500">{assignment.description}</p>
@@ -222,15 +284,20 @@ function Dashboard() {
                             Due {assignment.dueDate}
                           </p>
                         )}
-                      </div>
+                      </motion.div>
                     ))
                   ) : (
                     <p className="text-sm text-slate-500">No assignments for your batch yet.</p>
                   )}
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 }}
+                className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg"
+              >
                 <p className="text-sm font-semibold text-slate-500">Analytics</p>
                 <div className="mt-4 space-y-4">
                   {[
@@ -264,7 +331,7 @@ function Dashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         ) : (
