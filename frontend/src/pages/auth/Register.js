@@ -57,6 +57,7 @@ function Register() {
         payload.phone = contact.replace(/\D/g, "");
         if (!payload.phone) {
           alert("Please enter a valid phone number");
+          setLoading(false);
           return;
         }
       }
@@ -70,7 +71,8 @@ function Register() {
       localStorage.removeItem("pendingAdmission");
       navigate("/login");
     } catch (error) {
-      alert(error.response?.data?.message || "Registration Failed");
+      const apiMessage = error.response?.data?.message || error.response?.data?.error;
+      alert(apiMessage || "Registration Failed");
     } finally {
       setLoading(false);
     }
