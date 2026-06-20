@@ -14,7 +14,7 @@ const admissionSchema = new mongoose.Schema({
 
   email: {
     type: String,
-    required: true,
+    required: false,
     lowercase: true,
     trim: true
   },
@@ -24,14 +24,21 @@ const admissionSchema = new mongoose.Schema({
     required: true
   },
 
-  course: {
-    type: String,
+  courses: {
+    type: [String],
     required: true
+  },
+
+  feeStatus: {
+    type: String,
+    enum: ["pending", "paid"],
+    default: "pending"
   },
 
   address: {
     type: String,
-    required: true
+    required: false,
+    default: ""
   }
 
 }, {

@@ -25,6 +25,7 @@ import Login from "./pages/auth/Login";
 
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminBatchStudents from "./pages/AdminBatchStudents";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -113,6 +114,15 @@ function App() {
 
           }
 
+        />
+
+        <Route
+          path="/admin/batch/:batch"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminBatchStudents />
+            </ProtectedRoute>
+          }
         />
 
       </Routes>

@@ -6,163 +6,68 @@ import {
   FaEnvelope,
   FaHome,
   FaPhone,
+  FaRegCreditCard,
   FaUserGraduate
 } from "react-icons/fa";
 import API_URL from "../apiConfig";
 
 function Dashboard() {
-
   const navigate = useNavigate();
-
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
-  const [admission, setAdmission] =
-  useState(null);
-  const [loading, setLoading] =
-  useState(true);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const [admission, setAdmission] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const fetchAdmission = async () => {
-
       try {
-
-        const token =
-        localStorage.getItem("token");
-
-        const res = await axios.get(
-          `${API_URL}/api/admissions/me`,
-          {
-            headers: {
-              Authorization:
-              `Bearer ${token}`
-            }
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${API_URL}/api/admissions/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        );
-
+        });
         setAdmission(res.data);
-
       } catch (error) {
-
         setAdmission(null);
-
       } finally {
-
         setLoading(false);
-
       }
-
     };
 
     fetchAdmission();
-
   }, []);
 
   const logout = () => {
-
     localStorage.removeItem("token");
-
     localStorage.removeItem("user");
-
     navigate("/login");
-
   };
 
   return (
-
-    <div className="
-      min-h-screen
-      flex
-      items-center
-      justify-center
-      bg-gradient-to-br
-      from-cyan-50
-      via-white
-      to-amber-50
-      p-6
-    ">
-
-      <div className="
-        bg-white/90
-        shadow-2xl
-        rounded-2xl
-        p-8
-        w-full
-        max-w-5xl
-        border
-        border-white
-      ">
-
-        <div className="
-          flex
-          flex-col
-          md:flex-row
-          md:items-center
-          md:justify-between
-          gap-5
-          mb-8
-        ">
-
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#ecfeff,_#f8fafc_45%,_#fff7ed_100%)] px-4 py-10">
+      <div className="mx-auto w-full max-w-6xl rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
-
-            <p className="
-              text-sm
-              uppercase
-              tracking-wide
-              text-blue-700
-              font-bold
-              mb-2
-            ">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
               Student Dashboard
             </p>
-
-            <h1 className="
-              text-4xl
-              font-bold
-              text-gray-900
-            ">
+            <h1 className="mt-2 text-4xl font-black text-slate-900">
               Welcome {user?.name}
             </h1>
-
           </div>
 
           <button
-
             onClick={logout}
-
-            className="
-              bg-red-500
-              hover:bg-red-600
-              text-white
-              px-8
-              py-3
-              rounded-xl
-              font-bold
-              transition
-            "
+            className="rounded-2xl bg-red-500 px-6 py-3 font-bold text-white shadow-lg transition hover:bg-red-600"
           >
-
             Logout
-
           </button>
-
         </div>
 
         {loading ? (
-
-          <p className="text-gray-600">
-            Loading your admission details...
-          </p>
-
+          <p className="text-slate-600">Loading your admission details...</p>
         ) : admission ? (
-
-          <div className="
-            grid
-            md:grid-cols-2
-            gap-5
-          ">
-
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {[
               {
                 icon: <FaUserGraduate />,
@@ -170,92 +75,80 @@ function Dashboard() {
                 value: admission.studentName
               },
               {
-                icon: <FaEnvelope />,
-                label: "Email",
-                value: admission.email
-              },
-              {
                 icon: <FaPhone />,
                 label: "Phone",
                 value: admission.phone
               },
               {
+                icon: <FaEnvelope />,
+                label: "Email",
+                value: admission.email || "Not provided"
+              },
+              {
                 icon: <FaBookOpen />,
-                label: "Class & Course",
-                value: `${admission.studentClass} - ${admission.course}`
+                label: "Class",
+                value: admission.studentClass
+              },
+              {
+                icon: <FaRegCreditCard />,
+                label: "Fee Status",
+                value: admission.feeStatus
               },
               {
                 icon: <FaHome />,
                 label: "Address",
-                value: admission.address
+                value: admission.address || "Not provided"
               }
-            ].map((item) => (
+            ].map((item) => {
+              const statusColor =
+                item.label === "Fee Status"
+                  ? admission.feeStatus === "paid"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-rose-100 text-rose-700"
+                  : "bg-white";
 
-              <div
-                key={item.label}
-                className="
-                  bg-gradient-to-br
-                  from-white
-                  to-blue-50
-                  border
-                  border-blue-100
-                  rounded-2xl
-                  p-6
-                  shadow-lg
-                "
-              >
-
-                <div className="
-                  text-blue-700
-                  text-3xl
-                  mb-4
-                ">
-                  {item.icon}
+              return (
+                <div
+                  key={item.label}
+                  className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-blue-50 p-6 shadow-lg"
+                >
+                  <div className="mb-4 text-3xl text-blue-700">{item.icon}</div>
+                  <p className="text-sm font-semibold text-slate-500">{item.label}</p>
+                  <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-lg font-bold ${statusColor}`}>
+                    {item.label === "Fee Status"
+                      ? item.value.charAt(0).toUpperCase() + item.value.slice(1)
+                      : item.value}
+                  </p>
                 </div>
+              );
+            })}
 
-                <p className="
-                  text-sm
-                  text-gray-500
-                  font-semibold
-                  mb-1
-                ">
-                  {item.label}
-                </p>
-
-                <p className="
-                  text-xl
-                  font-bold
-                  text-gray-900
-                ">
-                  {item.value}
-                </p>
-
+            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg md:col-span-2 xl:col-span-3">
+              <p className="text-sm font-semibold text-slate-500">Selected Courses</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                {(admission.courses || []).map((course) => (
+                  <span
+                    key={course}
+                    className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-md"
+                  >
+                    {course}
+                  </span>
+                ))}
+                {!admission.courses?.length && (
+                  <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                    No course selected
+                  </span>
+                )}
               </div>
-
-            ))}
-
+            </div>
           </div>
-
         ) : (
-
-          <div className="
-            bg-yellow-50
-            border
-            border-yellow-200
-            rounded-2xl
-            p-6
-            text-yellow-800
-            font-semibold
-          ">
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 font-semibold text-amber-800">
             Admission details not found for this account.
           </div>
-
         )}
-
       </div>
-
     </div>
-
   );
 }
 

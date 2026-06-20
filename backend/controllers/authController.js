@@ -5,15 +5,49 @@ const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken");
 
+const normalizeEmail = (value) =>
+  typeof value === "string" ? value.trim().toLowerCase() : "";
+
+const normalizePhone = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const normalizeName = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const isEmailLike = (value) =>
+  typeof value === "string" && value.includes("@");
+
 exports.register = async (req, res) => {
 
   try {
 
-    const { name, email, password } = req.body;
-    const cleanEmail = email.toLowerCase().trim();
+    const {
+      name,
+      email,
+      phone,
+      contact,
+      password
+    } = req.body;
+
+    const cleanName = normalizeName(name);
+    const cleanEmail = normalizeEmail(
+      email || (isEmailLike(contact) ? contact : "")
+    );
+    const cleanPhone = normalizePhone(
+      phone || (!email && contact && !isEmailLike(contact) ? contact : "")
+    );
+
+    if (!cleanName || !password || (!cleanEmail && !cleanPhone)) {
+      return res.status(400).json({
+        message: "Name, password, and email or phone are required"
+      });
+    }
 
     const admission = await Admission.findOne({
-      email: cleanEmail
+      $or: [
+        cleanEmail ? { email: cleanEmail } : null,
+        cleanPhone ? { phone: cleanPhone } : null
+      ].filter(Boolean)
     });
 
     if (!admission) {
@@ -23,7 +57,10 @@ exports.register = async (req, res) => {
     }
 
     const existingUser = await User.findOne({
-      email: cleanEmail
+      $or: [
+        cleanEmail ? { email: cleanEmail } : null,
+        cleanPhone ? { phone: cleanPhone } : null
+      ].filter(Boolean)
     });
 
     if (existingUser) {
@@ -36,8 +73,9 @@ exports.register = async (req, res) => {
       await bcrypt.hash(password, 10);
 
     await User.create({
-      name,
-      email: cleanEmail,
+      name: cleanName,
+      email: cleanEmail || undefined,
+      phone: cleanPhone || undefined,
       password: hashedPassword,
       role: "student"
     });
@@ -60,11 +98,25 @@ exports.login = async (req, res) => {
 
   try {
 
-    const { email, password } = req.body;
-    const cleanEmail = email.toLowerCase().trim();
+    const { identifier, email, phone, password } = req.body;
+    const cleanEmail = normalizeEmail(
+      email || (isEmailLike(identifier) ? identifier : "")
+    );
+    const cleanPhone = normalizePhone(
+      phone || (!email && identifier && !isEmailLike(identifier) ? identifier : "")
+    );
+
+    if (!password || (!cleanEmail && !cleanPhone)) {
+      return res.status(400).json({
+        message: "Email or phone and password are required"
+      });
+    }
 
     const user = await User.findOne({
-      email: cleanEmail
+      $or: [
+        cleanEmail ? { email: cleanEmail } : null,
+        cleanPhone ? { phone: cleanPhone } : null
+      ].filter(Boolean)
     });
 
     if (!user) {
@@ -101,6 +153,7 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role
       }
     });

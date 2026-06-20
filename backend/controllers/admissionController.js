@@ -2,15 +2,53 @@ const Admission =
 require("../models/Admission");
 const User = require("../models/User");
 
+const normalizeString = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const normalizeEmail = (value) =>
+  normalizeString(value).toLowerCase();
+
+const normalizePhone = (value) =>
+  normalizeString(value);
+
+const normalizeCourses = (courses) => {
+  if (Array.isArray(courses)) {
+    return [...new Set(courses.map(normalizeString).filter(Boolean))];
+  }
+
+  if (typeof courses === "string" && courses.trim()) {
+    return [courses.trim()];
+  }
+
+  return [];
+};
+
 /* Create Admission */
 
 exports.createAdmission =
 async (req, res) => {
 
   try {
+    const courses = normalizeCourses(req.body.courses);
+    const email = normalizeEmail(req.body.email);
+    const phone = normalizePhone(req.body.phone);
 
-    const admission =
-    await Admission.create(req.body);
+    if (!req.body.studentName || !phone || !req.body.studentClass || !courses.length) {
+      return res.status(400).json({
+        message: "Name, phone, class, and at least one course are required"
+      });
+    }
+
+    const admission = await Admission.create({
+      ...req.body,
+      studentName: normalizeString(req.body.studentName),
+      phone,
+      email: email || undefined,
+      studentClass: normalizeString(req.body.studentClass),
+      courses,
+      address: normalizeString(req.body.address),
+      feeStatus: req.body.feeStatus || "pending"
+    });
 
     res.status(201).json({
       message: "Admission Submitted",
@@ -68,9 +106,11 @@ async (req, res) => {
       });
     }
 
-    const admission =
-    await Admission.findOne({
-      email: user.email
+    const admission = await Admission.findOne({
+      $or: [
+        user.email ? { email: user.email.toLowerCase().trim() } : null,
+        user.phone ? { phone: user.phone.trim() } : null
+      ].filter(Boolean)
     }).sort({
       createdAt: -1
     });
@@ -124,13 +164,47 @@ exports.updateAdmission =
 async (req, res) => {
 
   try {
+    const payload = {
+      ...req.body,
+      studentName: req.body.studentName
+        ? normalizeString(req.body.studentName)
+        : req.body.studentName,
+      phone: req.body.phone ? normalizePhone(req.body.phone) : req.body.phone,
+      email: req.body.email
+        ? normalizeEmail(req.body.email)
+        : req.body.email,
+      studentClass: req.body.studentClass
+        ? normalizeString(req.body.studentClass)
+        : req.body.studentClass,
+      courses: req.body.courses
+        ? normalizeCourses(req.body.courses)
+        : req.body.courses,
+      address: req.body.address !== undefined
+        ? normalizeString(req.body.address)
+        : req.body.address,
+      feeStatus: req.body.feeStatus === "pending" || req.body.feeStatus === "paid"
+        ? req.body.feeStatus
+        : undefined
+    };
+
+    if (Array.isArray(payload.courses) && !payload.courses.length) {
+      return res.status(400).json({
+        message: "Please select at least one course"
+      });
+    }
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
 
     const updatedStudent =
     await Admission.findByIdAndUpdate(
 
       req.params.id,
 
-      req.body,
+      payload,
 
       {
         new: true
