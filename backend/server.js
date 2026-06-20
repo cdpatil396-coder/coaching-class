@@ -74,6 +74,51 @@ async () => {
 
 };
 
+const normalizeUserIndexes =
+async () => {
+
+  await User.updateMany(
+    {
+      $or: [
+        {
+          email: null
+        },
+        {
+          email: ""
+        }
+      ]
+    },
+    {
+      $unset: {
+        email: ""
+      }
+    }
+  );
+
+  await User.updateMany(
+    {
+      $or: [
+        {
+          phone: null
+        },
+        {
+          phone: ""
+        }
+      ]
+    },
+    {
+      $unset: {
+        phone: ""
+      }
+    }
+  );
+
+  await User.syncIndexes();
+
+  console.log("User indexes normalized");
+
+};
+
 const createRateLimiter = ({
   windowMs,
   max
@@ -191,6 +236,12 @@ mongoose.connect(process.env.MONGO_URI, {
   console.log("MongoDB Connected");
 
   return ensureAdminUser();
+
+})
+
+.then(() => {
+
+  return normalizeUserIndexes();
 
 })
 
