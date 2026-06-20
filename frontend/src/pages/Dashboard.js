@@ -17,6 +17,14 @@ import API_URL from "../apiConfig";
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "Not available";
 
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const safeParseUser = () => {
   try {
     return JSON.parse(localStorage.getItem("user"));
@@ -82,6 +90,185 @@ function Dashboard() {
     admission?.testResults && admission.testResults.length
       ? admission.testResults[admission.testResults.length - 1]
       : null;
+
+  const downloadFeeReceipt = () => {
+    if (!admission || admission.feeStatus !== "paid") return;
+
+    const receiptWindow = window.open("", "_blank", "width=900,height=1200");
+    if (!receiptWindow) {
+      alert("Popup blocked. Please allow popups to download your receipt.");
+      return;
+    }
+
+    receiptWindow.document.write(`
+      <html>
+        <head>
+          <title>Fee Receipt ${escapeHtml(admission.receiptNo || admission._id)}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 32px;
+              background: #f8fafc;
+              color: #0f172a;
+            }
+            .sheet {
+              max-width: 760px;
+              margin: 0 auto;
+              background: white;
+              border-radius: 24px;
+              padding: 32px;
+              box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+              border: 1px solid #e2e8f0;
+            }
+            .top {
+              display: flex;
+              justify-content: space-between;
+              gap: 16px;
+              align-items: flex-start;
+              border-bottom: 2px solid #e2e8f0;
+              padding-bottom: 20px;
+              margin-bottom: 24px;
+            }
+            h1 {
+              margin: 0;
+              font-size: 30px;
+              color: #1d4ed8;
+            }
+            .sub {
+              color: #64748b;
+              margin-top: 6px;
+            }
+            .badge {
+              padding: 10px 16px;
+              border-radius: 999px;
+              background: #dcfce7;
+              color: #166534;
+              font-weight: 700;
+              white-space: nowrap;
+            }
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 16px;
+              margin-top: 20px;
+            }
+            .item {
+              padding: 16px;
+              border-radius: 18px;
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+            }
+            .label {
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.12em;
+              color: #64748b;
+              font-weight: 700;
+            }
+            .value {
+              margin-top: 8px;
+              font-size: 16px;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .footer {
+              margin-top: 28px;
+              display: flex;
+              justify-content: space-between;
+              gap: 16px;
+              align-items: flex-end;
+              color: #64748b;
+              font-size: 12px;
+            }
+            @media print {
+              body {
+                background: white;
+                padding: 0;
+              }
+              .sheet {
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="sheet">
+            <div class="top">
+              <div>
+                <h1>Paid Fee Receipt</h1>
+                <div class="sub">Swami Coaching Classes</div>
+                <div class="sub">A clean payment receipt for student records</div>
+              </div>
+              <div class="badge">PAID</div>
+            </div>
+
+            <div class="grid">
+              <div class="item">
+                <div class="label">Receipt No</div>
+                <div class="value">${escapeHtml(admission.receiptNo || "Pending")}</div>
+              </div>
+              <div class="item">
+                <div class="label">Paid On</div>
+                <div class="value">${escapeHtml(
+                  admission.paidAt ? new Date(admission.paidAt).toLocaleString() : "Not available"
+                )}</div>
+              </div>
+              <div class="item">
+                <div class="label">Student Name</div>
+                <div class="value">${escapeHtml(admission.studentName)}</div>
+              </div>
+              <div class="item">
+                <div class="label">Phone</div>
+                <div class="value">${escapeHtml(admission.phone)}</div>
+              </div>
+              <div class="item">
+                <div class="label">Class</div>
+                <div class="value">${escapeHtml(admission.studentClass)}</div>
+              </div>
+              <div class="item">
+                <div class="label">Admission Date</div>
+                <div class="value">${escapeHtml(formatDate(admission.admissionDate || admission.createdAt))}</div>
+              </div>
+              <div class="item">
+                <div class="label">Courses</div>
+                <div class="value">${escapeHtml((admission.courses || []).join(", ") || "Not selected")}</div>
+              </div>
+              <div class="item">
+                <div class="label">Fee Status</div>
+                <div class="value">${escapeHtml(
+                  admission.feeStatus ? admission.feeStatus.charAt(0).toUpperCase() + admission.feeStatus.slice(1) : "Pending"
+                )}</div>
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top: 16px;">
+              <div class="item" style="grid-column: 1 / -1;">
+                <div class="label">Address</div>
+                <div class="value">${escapeHtml(admission.address || "Not provided")}</div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <div>
+                <div>Generated automatically for student dashboard.</div>
+                <div>Keep this receipt for your records.</div>
+              </div>
+              <div>Swami Coaching Classes</div>
+            </div>
+          </div>
+          <script>
+            window.onload = function () {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    receiptWindow.document.close();
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#ecfeff,_#f8fafc_45%,_#fff7ed_100%)] px-4 py-10">
@@ -254,6 +441,21 @@ function Dashboard() {
                     </p>
                   </div>
                   <FaFileAlt className="text-4xl text-blue-700" />
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={downloadFeeReceipt}
+                    disabled={admission.feeStatus !== "paid"}
+                    className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  >
+                    Download Fee PDF
+                  </button>
+                  <p className="text-sm text-slate-500">
+                    {admission.feeStatus === "paid"
+                      ? "Your paid receipt includes receipt number, payment date, class, courses, and address."
+                      : "The download button becomes available after the admin marks your fee as paid."}
+                  </p>
                 </div>
               </motion.div>
             </div>
