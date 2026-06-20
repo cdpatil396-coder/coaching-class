@@ -110,13 +110,21 @@ exports.register = async (req, res) => {
     const hashedPassword =
       await bcrypt.hash(password, 10);
 
-    await User.create({
+    const userPayload = {
       name: cleanName,
-      email: finalEmail || undefined,
-      phone: finalPhone || undefined,
       password: hashedPassword,
       role: "student"
-    });
+    };
+
+    if (finalEmail) {
+      userPayload.email = finalEmail;
+    }
+
+    if (finalPhone) {
+      userPayload.phone = finalPhone;
+    }
+
+    await User.create(userPayload);
 
     res.status(201).json({
       message: "Registration Successful"

@@ -48,7 +48,7 @@ function Register() {
       };
 
       if (pendingAdmission?.email) {
-        payload.admissionEmail = pendingAdmission.email;
+        payload.admissionEmail = String(pendingAdmission.email).trim().toLowerCase();
       }
 
       if (pendingAdmission?.phone) {
@@ -64,6 +64,12 @@ function Register() {
           setLoading(false);
           return;
         }
+      }
+
+      if (!payload.email && !payload.phone) {
+        alert("Please enter a valid email or phone number");
+        setLoading(false);
+        return;
       }
 
       const res = await axios.post(
