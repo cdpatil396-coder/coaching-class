@@ -11,9 +11,13 @@ import API_URL from "../../apiConfig";
 
 function Register() {
   const navigate = useNavigate();
-  const pendingAdmission = JSON.parse(
-    localStorage.getItem("pendingAdmission")
-  );
+  const pendingAdmission = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("pendingAdmission"));
+    } catch (error) {
+      return null;
+    }
+  })();
 
   const [formData, setFormData] = useState({
     name: pendingAdmission?.name || "",
@@ -41,15 +45,20 @@ function Register() {
         return;
       }
 
+      const contact = formData.contact.trim();
       const payload = {
         name: formData.name,
         password: formData.password
       };
 
-      if (formData.contact.includes("@")) {
-        payload.email = formData.contact;
+      if (contact.includes("@")) {
+        payload.email = contact.toLowerCase();
       } else {
-        payload.phone = formData.contact;
+        payload.phone = contact.replace(/\D/g, "");
+        if (!payload.phone) {
+          alert("Please enter a valid phone number");
+          return;
+        }
       }
 
       const res = await axios.post(

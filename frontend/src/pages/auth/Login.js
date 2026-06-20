@@ -29,9 +29,13 @@ function Login() {
     setLoading(true);
 
     try {
+      const identifier = formData.identifier.trim();
       const res = await axios.post(
         `${API_URL}/api/auth/login`,
-        formData
+        {
+          identifier,
+          password: formData.password
+        }
       );
 
       localStorage.setItem("token", res.data.token);

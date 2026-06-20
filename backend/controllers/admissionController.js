@@ -11,6 +11,25 @@ const normalizeEmail = (value) =>
 const normalizePhone = (value) =>
   normalizeString(value);
 
+const phoneLookupConditions = (value) => {
+  const trimmed = normalizePhone(value);
+  const digits = trimmed.replace(/\D/g, "");
+  const conditions = [];
+
+  if (trimmed) {
+    conditions.push({ phone: trimmed });
+  }
+
+  if (digits) {
+    conditions.push({ phone: digits });
+    conditions.push({
+      phone: new RegExp(digits.split("").join("[^0-9]*"))
+    });
+  }
+
+  return conditions;
+};
+
 const normalizeCourses = (courses) => {
   if (Array.isArray(courses)) {
     return [...new Set(courses.map(normalizeString).filter(Boolean))];
@@ -34,7 +53,7 @@ async (req, res) => {
   try {
     const courses = normalizeCourses(req.body.courses);
     const email = normalizeEmail(req.body.email);
-    const phone = normalizePhone(req.body.phone);
+    const phone = normalizePhone(req.body.phone).replace(/\D/g, "");
 
     if (!req.body.studentName || !phone || !req.body.studentClass || !courses.length) {
       return res.status(400).json({
@@ -42,11 +61,14 @@ async (req, res) => {
       });
     }
 
+    const duplicateQuery = [];
+    if (email) {
+      duplicateQuery.push({ email });
+    }
+    duplicateQuery.push(...phoneLookupConditions(req.body.phone));
+
     const duplicateAdmission = await Admission.findOne({
-      $or: [
-        phone ? { phone } : null,
-        email ? { email } : null
-      ].filter(Boolean)
+      $or: duplicateQuery
     });
 
     if (duplicateAdmission) {
@@ -124,11 +146,14 @@ async (req, res) => {
       });
     }
 
+    const admissionQuery = [];
+    if (user.email) {
+      admissionQuery.push({ email: user.email.toLowerCase().trim() });
+    }
+    admissionQuery.push(...phoneLookupConditions(user.phone));
+
     const admission = await Admission.findOne({
-      $or: [
-        user.email ? { email: user.email.toLowerCase().trim() } : null,
-        user.phone ? { phone: user.phone.trim() } : null
-      ].filter(Boolean)
+      $or: admissionQuery
     }).sort({
       createdAt: -1
     });
@@ -187,7 +212,7 @@ async (req, res) => {
       studentName: req.body.studentName
         ? normalizeString(req.body.studentName)
         : req.body.studentName,
-      phone: req.body.phone ? normalizePhone(req.body.phone) : req.body.phone,
+      phone: req.body.phone ? normalizePhone(req.body.phone).replace(/\D/g, "") : req.body.phone,
       email: req.body.email
         ? normalizeEmail(req.body.email)
         : req.body.email,

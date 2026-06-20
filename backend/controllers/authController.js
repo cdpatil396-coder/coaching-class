@@ -11,6 +11,25 @@ const normalizeEmail = (value) =>
 const normalizePhone = (value) =>
   typeof value === "string" ? value.trim() : "";
 
+const phoneLookupConditions = (value) => {
+  const trimmed = normalizePhone(value);
+  const digits = trimmed.replace(/\D/g, "");
+  const conditions = [];
+
+  if (trimmed) {
+    conditions.push({ phone: trimmed });
+  }
+
+  if (digits) {
+    conditions.push({ phone: digits });
+    conditions.push({
+      phone: new RegExp(digits.split("").join("[^0-9]*"))
+    });
+  }
+
+  return conditions;
+};
+
 const normalizeName = (value) =>
   typeof value === "string" ? value.trim() : "";
 
@@ -33,9 +52,10 @@ exports.register = async (req, res) => {
     const cleanEmail = normalizeEmail(
       email || (isEmailLike(contact) ? contact : "")
     );
-    const cleanPhone = normalizePhone(
+    const cleanPhoneInput = normalizePhone(
       phone || (!email && contact && !isEmailLike(contact) ? contact : "")
     );
+    const cleanPhone = cleanPhoneInput ? cleanPhoneInput.replace(/\D/g, "") : "";
 
     if (!cleanName || !password || (!cleanEmail && !cleanPhone)) {
       return res.status(400).json({
@@ -43,11 +63,14 @@ exports.register = async (req, res) => {
       });
     }
 
+    const admissionQuery = [];
+    if (cleanEmail) {
+      admissionQuery.push({ email: cleanEmail });
+    }
+    admissionQuery.push(...phoneLookupConditions(cleanPhoneInput));
+
     const admission = await Admission.findOne({
-      $or: [
-        cleanEmail ? { email: cleanEmail } : null,
-        cleanPhone ? { phone: cleanPhone } : null
-      ].filter(Boolean)
+      $or: admissionQuery
     });
 
     if (!admission) {
@@ -56,11 +79,14 @@ exports.register = async (req, res) => {
       });
     }
 
+    const existingUserQuery = [];
+    if (cleanEmail) {
+      existingUserQuery.push({ email: cleanEmail });
+    }
+    existingUserQuery.push(...phoneLookupConditions(cleanPhoneInput));
+
     const existingUser = await User.findOne({
-      $or: [
-        cleanEmail ? { email: cleanEmail } : null,
-        cleanPhone ? { phone: cleanPhone } : null
-      ].filter(Boolean)
+      $or: existingUserQuery
     });
 
     if (existingUser) {
@@ -102,9 +128,10 @@ exports.login = async (req, res) => {
     const cleanEmail = normalizeEmail(
       email || (isEmailLike(identifier) ? identifier : "")
     );
-    const cleanPhone = normalizePhone(
+    const cleanPhoneInput = normalizePhone(
       phone || (!email && identifier && !isEmailLike(identifier) ? identifier : "")
     );
+    const cleanPhone = cleanPhoneInput ? cleanPhoneInput.replace(/\D/g, "") : "";
 
     if (!password || (!cleanEmail && !cleanPhone)) {
       return res.status(400).json({
@@ -112,11 +139,14 @@ exports.login = async (req, res) => {
       });
     }
 
+    const userQuery = [];
+    if (cleanEmail) {
+      userQuery.push({ email: cleanEmail });
+    }
+    userQuery.push(...phoneLookupConditions(cleanPhoneInput));
+
     const user = await User.findOne({
-      $or: [
-        cleanEmail ? { email: cleanEmail } : null,
-        cleanPhone ? { phone: cleanPhone } : null
-      ].filter(Boolean)
+      $or: userQuery
     });
 
     if (!user) {
