@@ -83,8 +83,8 @@ function Admission() {
         "pendingAdmission",
         JSON.stringify({
           name: formData.studentName,
-          phone: formData.phone,
-          email: formData.email,
+          phone: formData.phone.replace(/\D/g, ""),
+          email: formData.email.trim().toLowerCase(),
           studentClass: formData.studentClass,
           courses: formData.courses,
           notes: formData.notes

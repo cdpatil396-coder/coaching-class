@@ -45,6 +45,8 @@ exports.register = async (req, res) => {
       email,
       phone,
       contact,
+      admissionEmail,
+      admissionPhone,
       password
     } = req.body;
 
@@ -56,18 +58,27 @@ exports.register = async (req, res) => {
       phone || (!email && contact && !isEmailLike(contact) ? contact : "")
     );
     const cleanPhone = cleanPhoneInput ? cleanPhoneInput.replace(/\D/g, "") : "";
+    const cleanAdmissionEmail = normalizeEmail(admissionEmail);
+    const cleanAdmissionPhoneInput = normalizePhone(admissionPhone);
+    const cleanAdmissionPhone = cleanAdmissionPhoneInput
+      ? cleanAdmissionPhoneInput.replace(/\D/g, "")
+      : "";
 
-    if (!cleanName || !password || (!cleanEmail && !cleanPhone)) {
+    const finalEmail = cleanEmail || cleanAdmissionEmail;
+    const finalPhone = cleanPhone || cleanAdmissionPhone;
+
+    if (!cleanName || !password || (!finalEmail && !finalPhone)) {
       return res.status(400).json({
         message: "Name, password, and email or phone are required"
       });
     }
 
     const admissionQuery = [];
-    if (cleanEmail) {
-      admissionQuery.push({ email: cleanEmail });
+    if (finalEmail) {
+      admissionQuery.push({ email: finalEmail });
     }
     admissionQuery.push(...phoneLookupConditions(cleanPhoneInput));
+    admissionQuery.push(...phoneLookupConditions(cleanAdmissionPhoneInput));
 
     const admission = await Admission.findOne({
       $or: admissionQuery
@@ -80,10 +91,11 @@ exports.register = async (req, res) => {
     }
 
     const existingUserQuery = [];
-    if (cleanEmail) {
-      existingUserQuery.push({ email: cleanEmail });
+    if (finalEmail) {
+      existingUserQuery.push({ email: finalEmail });
     }
     existingUserQuery.push(...phoneLookupConditions(cleanPhoneInput));
+    existingUserQuery.push(...phoneLookupConditions(cleanAdmissionPhoneInput));
 
     const existingUser = await User.findOne({
       $or: existingUserQuery
@@ -100,8 +112,8 @@ exports.register = async (req, res) => {
 
     await User.create({
       name: cleanName,
-      email: cleanEmail || undefined,
-      phone: cleanPhone || undefined,
+      email: finalEmail || undefined,
+      phone: finalPhone || undefined,
       password: hashedPassword,
       role: "student"
     });

@@ -39,17 +39,19 @@ function Register() {
     setLoading(true);
 
     try {
-      if (!localStorage.getItem("admissionSubmitted")) {
-        alert("Please fill admission form first");
-        navigate("/admission");
-        return;
-      }
-
       const contact = formData.contact.trim();
       const payload = {
         name: formData.name,
         password: formData.password
       };
+
+      if (pendingAdmission?.email) {
+        payload.admissionEmail = pendingAdmission.email;
+      }
+
+      if (pendingAdmission?.phone) {
+        payload.admissionPhone = String(pendingAdmission.phone).replace(/\D/g, "");
+      }
 
       if (contact.includes("@")) {
         payload.email = contact.toLowerCase();
@@ -69,6 +71,7 @@ function Register() {
 
       alert(res.data.message);
       localStorage.removeItem("pendingAdmission");
+      localStorage.removeItem("admissionSubmitted");
       navigate("/login");
     } catch (error) {
       const apiMessage = error.response?.data?.message || error.response?.data?.error;
