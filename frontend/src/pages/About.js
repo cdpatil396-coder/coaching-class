@@ -19,7 +19,7 @@ function About() {
     },
     {
       icon: <FaChalkboardTeacher />,
-      number: "20+",
+      number: "2+",
       title: "Expert Teachers"
     },
     {
