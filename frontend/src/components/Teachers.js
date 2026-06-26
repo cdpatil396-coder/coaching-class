@@ -4,21 +4,22 @@ import { FaChalkboardTeacher } from "react-icons/fa";
 function Teachers() {
 
   const teachers = [
+       {
+      name: "Dinesh Sir",
+      subject: "Mathematics",
+      experience: "8+ Years Experience"
+    }, 
     {
       name: "Rajesh Sharma",
       subject: "Physics",
       experience: "10+ Years Experience"
     },
-    {
-      name: "Dinesh Sir",
-      subject: "Mathematics",
-      experience: "8+ Years Experience"
-    },
-    {
-      name: "Patil Madam",
-      subject: "Chemistry",
-      experience: "6+ Years Experience"
-    }
+ 
+    // {
+    //   name: "Patil Madam",
+    //   subject: "Chemistry",
+    //   experience: "6+ Years Experience"
+    // }
   ];
 
   return (
