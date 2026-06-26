@@ -34,7 +34,7 @@ function Teachers() {
         </h1>
 
         <p className="text-gray-600 text-lg">
-          Experienced Faculty For 10th & 12th Board Preparation
+          Experienced Faculty For 10th & 12th Board Preparation |  MH-CET 
         </p>
 
       </div>
