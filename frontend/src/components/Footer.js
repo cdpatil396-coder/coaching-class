@@ -11,7 +11,7 @@ function Footer() {
         </h1>
 
         <p className="mb-4">
-          Best Coaching Institute for 10th, 12th Boards | Manage & developed by : @Chetan Patil   
+          Best Coaching Institute for 10th, 12th Boards | Developed & Manage by : @Chetan Patil   
         </p>
 
         <p>
