@@ -14,12 +14,11 @@ function Teachers() {
       subject: "Physics",
       experience: "10+ Years Experience"
     },
- 
-    // {
-    //   name: "Patil Madam",
-    //   subject: "Chemistry",
-    //   experience: "6+ Years Experience"
-    // }
+    {
+      name: "Patil Madam",
+      subject: "Chemistry",
+      experience: "6+ Years Experience"
+    }
   ];
 
   return (
